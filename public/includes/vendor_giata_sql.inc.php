@@ -23,15 +23,11 @@
 */
 
 function dbget($dbh, $sql) {
-	
-	$stmt			=	$dbh->prepare($sql);
-	
-	$stmt->execute();
-	$fetched_rows	=	$stmt->fetchAll(PDO::FETCH_ASSOC);
-	$stmt->closeCursor();
-	$stmt			=	null;
-
-	return	$fetched_rows;
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute();
+    $fetched_rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->closeCursor();
+    return $fetched_rows;
 }
 
 function dbget_giata_accommodations($dbh) {
@@ -72,148 +68,107 @@ function dbget_giata_accommodations($dbh) {
 }
 
 function dbget_giata_chains($dbh) {
-
-	$sql			=	"
-	SELECT			giataId,
-					name
-	FROM			vendor_giata_chains
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT giataId, name
+    FROM vendor_giata_chains
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_cities($dbh) {
-
-	$sql			=	"
-	SELECT			giataId,
-					name
-	FROM			vendor_giata_cities
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT giataId, name
+    FROM vendor_giata_cities
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_definitions_attributes($dbh) {
-
-	$sql			=	"
-	SELECT			a.id,
-					a.label,
-					a.valueType,
-					CASE
-                    WHEN	u1.label	=	u2.label	
-					THEN	u1.label
-					ELSE	CONCAT(u1.label, ', ', u2.label)
-					END										AS	units
-	FROM			vendor_giata_definitions_attributes a
-    LEFT JOIN  		vendor_giata_definitions_units u1		ON	u1.id	=	SUBSTRING_INDEX(a.units, '|', 1)
-    LEFT JOIN  		vendor_giata_definitions_units u2		ON	u2.id	=	SUBSTRING_INDEX(a.units, '|', -1)
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT a.id, a.label, a.valueType,
+           CASE WHEN u1.label = u2.label THEN u1.label ELSE CONCAT(u1.label, ', ', u2.label) END AS units
+    FROM vendor_giata_definitions_attributes a
+    LEFT JOIN vendor_giata_definitions_units u1 ON u1.id = SUBSTRING_INDEX(a.units, '|', 1)
+    LEFT JOIN vendor_giata_definitions_units u2 ON u2.id = SUBSTRING_INDEX(a.units, '|', -1)
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_definitions_contexttree($dbh) {
-
-	$sql			=	"
-	SELECT			t1.id,
-					t1.label,
-					t2.label										AS	parent,
-					GROUP_CONCAT(DISTINCT df.label ORDER BY 1 SEPARATOR ', ')
-																	AS	facts
-	FROM			vendor_giata_definitions_contexttree t1
-	LEFT JOIN		vendor_giata_definitions_contexttree t2			ON	t2.id			=	t1.parentContextTreeId
-	LEFT JOIN		vendor_giata_definitions_contexttree_facts f	ON	f.contextTreeId	=	t1.id
-	JOIN			vendor_giata_definitions_facts df				ON	df.id			=	f.factId
-	GROUP BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT t1.id, t1.label, t2.label AS parent,
+           GROUP_CONCAT(DISTINCT df.label ORDER BY 1 SEPARATOR ', ') AS facts
+    FROM vendor_giata_definitions_contexttree t1
+    LEFT JOIN vendor_giata_definitions_contexttree t2 ON t2.id = t1.parentContextTreeId
+    LEFT JOIN vendor_giata_definitions_contexttree_facts f ON f.contextTreeId = t1.id
+    JOIN vendor_giata_definitions_facts df ON df.id = f.factId
+    GROUP BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_definitions_facts($dbh) {
-
-	$sql			=	"
-	SELECT			id,
-					label
-	FROM			vendor_giata_definitions_facts
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT id, label
+    FROM vendor_giata_definitions_facts
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_definitions_motif_types($dbh) {
-
-	$sql			=	"
-	SELECT			id,
-					label
-	FROM			vendor_giata_definitions_motif_types
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT id, label
+    FROM vendor_giata_definitions_motif_types
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_definitions_units($dbh) {
-
-	$sql			=	"
-	SELECT			id,
-					label
-	FROM			vendor_giata_definitions_units
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT id, label
+    FROM vendor_giata_definitions_units
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_destinations($dbh) {
-
-	$sql			=	"
-	SELECT			giataId,
-					name
-	FROM			vendor_giata_destinations
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT giataId, name
+    FROM vendor_giata_destinations
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_roomtypes($dbh) {
-
-	$sql			=	"
-	SELECT			r.variantId,
-					v.label							AS	variant,
-					r.category,
-					r.name,
-					r.type,
-					r.view,
-					r.image_relations
-	FROM			vendor_giata_roomtypes r
-	LEFT JOIN		vendor_giata_variants v			ON	v.variantId	=	r.variantId
-	ORDER BY		1";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT r.variantId, v.label AS variant, r.category, r.name, r.type, r.view, r.image_relations
+    FROM vendor_giata_roomtypes r
+    LEFT JOIN vendor_giata_variants v ON v.variantId = r.variantId
+    ORDER BY 1";
+    return dbget($dbh, $sql);
 }
 
 function dbget_giata_texts($dbh) {
-
-	$sql			=	"
-	SELECT			giata_id,
-					last_update,
-					sequence,
-					title,
-					paragraph
-	FROM			vendor_giata_texts
-	ORDER BY		1, 3";
-	
-	return	dbget($dbh, $sql);
+    $sql = "
+    SELECT giata_id, last_update, sequence, title, paragraph
+    FROM vendor_giata_texts
+    ORDER BY 1, 3";
+    return dbget($dbh, $sql);
 }
 
 function dbopen($dbconfig) {
-
-	$dbh	=	new PDO($dbconfig['db_pdo_driver_name']	. ':host=' . $dbconfig['db_hostname']  . ';dbname='	. $dbconfig['db_database'] . ';charset=utf8mb4',
-						$dbconfig['db_username'],
-						$dbconfig['db_password'],
-						array(
-							PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-							PDO::ATTR_PERSISTENT => false
-						)
-	);
-	
-	return $dbh;
+    try {
+        $dbh = new PDO(
+            $dbconfig['db_pdo_driver_name'] . ':host=' . $dbconfig['db_hostname'] . ';dbname=' . $dbconfig['db_database'] . ';charset=utf8mb4',
+            $dbconfig['db_username'],
+            $dbconfig['db_password'],
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_PERSISTENT => false
+            ]
+        );
+        return $dbh;
+    } catch (PDOException $e) {
+        logError('Database connection failed: ' . $e->getMessage());
+        throw $e;
+    }
 }

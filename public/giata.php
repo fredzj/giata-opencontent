@@ -1,11 +1,8 @@
 ﻿<?php
 /*
-
 	SCRIPT:		index.php
-	
 	PURPOSE:	Show data from Giata in a dashboard.
-	
-	Copyright 2024 Fred Onis - All rights reserved.
+	COPYRIGHT:  2024 Fred Onis - All rights reserved.
 	
 	get_html_definitions_attributes
 	get_html_definitions_contexttree
@@ -21,365 +18,154 @@
 	get_html_texts
 
 */
-function get_html_definitions_attributes($dbh) {
-	
-	$html		=	'';
-	
-	foreach (dbget_giata_definitions_attributes($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['id']			.	'</td>';
-		$html	.=	'<td>' . $row['label']		.	'</td>';
-		$html	.=	'<td>' . $row['valueType']	.	'</td>';
-		$html	.=	'<td>' . $row['units']		.	'</td>';
-		$html	.=	'</tr>';
-	}
 
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="id"		data-sortable="true" data-align="right"	>ID</th>'
-			.	'<th scope="col" data-field="label"		data-sortable="true"					>Label</th>'
-			.	'<th scope="col" data-field="valuetype"	data-sortable="true"					>Value Type</th>'
-			.	'<th scope="col" data-field="units"		data-sortable="true"					>Units</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+/**
+ * Generates an HTML table with the given data and columns.
+ *
+ * @param array $data An array of associative arrays representing the table rows.
+ * @param array $columns An array of associative arrays representing the table columns. Each column should have:
+ *                       - 'field': The key in the data array to be displayed in this column.
+ *                       - 'label': The label to be displayed in the table header.
+ *                       - 'align' (optional): The alignment of the column ('left', 'center', 'right').
+ *
+ * @return string The generated HTML table as a string.
+ */
+function get_html_table($data, $columns) {
+    $html = '<table class="table table-sm" data-custom-sort="" data-toggle="table" data-pagination="true" data-search="true" data-show-export="true">';
+    $html .= '<thead><tr>';
+    foreach ($columns as $column) {
+        $html .= '<th scope="col" data-field="' . $column['field'] . '" data-sortable="true" ' . (isset($column['align']) ? 'data-align="' . $column['align'] . '"' : '') . '>' . $column['label'] . '</th>';
+    }
+    $html .= '</tr></thead><tbody>';
+    foreach ($data as $row) {
+        $html .= '<tr>';
+        foreach ($columns as $column) {
+            $html .= '<td>' . htmlspecialchars($row[$column['field']]) . '</td>';
+        }
+        $html .= '</tr>';
+    }
+    $html .= '</tbody></table>';
+    return $html;
+}
+
+function get_html_definitions_attributes($dbh) {
+    $data = dbget_giata_definitions_attributes($dbh);
+    $columns = [
+        ['field' => 'id', 'label' => 'ID', 'align' => 'right'],
+        ['field' => 'label', 'label' => 'Label'],
+        ['field' => 'valueType', 'label' => 'Value Type'],
+        ['field' => 'units', 'label' => 'Units']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_definitions_contexttree($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_definitions_contexttree($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['id']		.	'</td>';
-		$html	.=	'<td>' . $row['parent']	.	'</td>';
-		$html	.=	'<td>' . $row['label']	.	'</td>';
-		$html	.=	'<td>' . $row['facts']	.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="id"		data-sortable="true" data-align="right"	>ID</th>'
-			.	'<th scope="col" data-field="parent"	data-sortable="true"					>Parent</th>'
-			.	'<th scope="col" data-field="label"		data-sortable="true"					>Label</th>'
-			.	'<th scope="col" data-field="facts"		data-sortable="true"					>Facts</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-
-	return $html;
+    $data = dbget_giata_definitions_contexttree($dbh);
+    $columns = [
+        ['field' => 'id', 'label' => 'ID', 'align' => 'right'],
+        ['field' => 'parent', 'label' => 'Parent'],
+        ['field' => 'label', 'label' => 'Label'],
+        ['field' => 'facts', 'label' => 'Facts']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_definitions_facts($dbh) {
-	
-	$html		=	'';
-	
-	foreach (dbget_giata_definitions_facts($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['id']		.	'</td>';
-		$html	.=	'<td>' . $row['label']	.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="id"	data-sortable="true" data-align="right"	>ID</th>'
-			.	'<th scope="col" data-field="label"	data-sortable="true"					>Label</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_definitions_facts($dbh);
+    $columns = [
+        ['field' => 'id', 'label' => 'ID', 'align' => 'right'],
+        ['field' => 'label', 'label' => 'Label']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_definitions_motif_types($dbh) {
-
-	$html		=	'';
-
-	foreach (dbget_giata_definitions_motif_types($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['id']		.	'</td>';
-		$html	.=	'<td>' . $row['label']	.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="id"	data-sortable="true">ID</th>'
-			.	'<th scope="col" data-field="label"	data-sortable="true">Label</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-
-	return $html;
+    $data = dbget_giata_definitions_motif_types($dbh);
+    $columns = [
+        ['field' => 'id', 'label' => 'ID', 'align' => 'right'],
+        ['field' => 'label', 'label' => 'Label']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_definitions_units($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_definitions_units($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['id']		.	'</td>';
-		$html	.=	'<td>' . $row['label']	.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="id"	data-sortable="true" data-align="right"	>ID</th>'
-			.	'<th scope="col" data-field="label"	data-sortable="true"					>Label</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_definitions_units($dbh);
+    $columns = [
+        ['field' => 'id', 'label' => 'ID', 'align' => 'right'],
+        ['field' => 'label', 'label' => 'Label']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_accommodations($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_accommodations($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['giata_id']			.	'</td>';
-		$html	.=	'<td>' . $row['name']				.	'</td>';
-		$html	.=	'<td>' . $row['city']				.	'</td>';
-		$html	.=	'<td>' . $row['destination']		.	'</td>';
-		$html	.=	'<td>' . $row['country_code']		.	'</td>';
-		$html	.=	'<td>' . $row['rating']				.	'</td>';
-		$html	.=	'<td>' . $row['address_street'] . ' ' . $row['address_streetnum'] . '<br>' . $row['address_zip'] . ' ' . $row['address_cityname'] . '<br>' . $row['address_pobox']		.	'</td>';
-		$html	.=	'<td>' . $row['phone'] . '<br>' . $row['email'] . '<br>' . $row['url']				.	'</td>';
-		$html	.=	'<td>' . $row['geocode_accuracy'] . '<br>' . $row['geocode_latitude'] . '<br>' . $row['geocode_longitude']	.	'</td>';
-		$html	.=	'<td class="text-nowrap">' . $row['roomtypes']			.	'</td>';
-		$html	.=	'<td>' . $row['facts']				.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="giata_id"			data-sortable="true" data-align="right"	>Giata ID</th>'
-			.	'<th scope="col" data-field="name"				data-sortable="true"					>Name</th>'
-			.	'<th scope="col" data-field="city"				data-sortable="true"					>City</th>'
-			.	'<th scope="col" data-field="destination"		data-sortable="true"					>Destination</th>'
-			.	'<th scope="col" data-field="country_code"		data-sortable="true"					>Country</th>'
-			.	'<th scope="col" data-field="rating"			data-sortable="true" data-align="right"	>Rating</th>'
-			.	'<th scope="col" data-field="address"			data-sortable="true"					>Address</th>'
-			.	'<th scope="col" data-field="contact"			data-sortable="true"					>Contact</th>'
-			.	'<th scope="col" data-field="geocode"			data-sortable="true" data-align="right"	>Geocodes</th>'
-			.	'<th scope="col" data-field="roomtypes"			data-sortable="true"					>Roomtypes</th>'
-			.	'<th scope="col" data-field="facts"				data-sortable="true"					>Facts</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_accommodations($dbh);
+    $columns = [
+        ['field' => 'giata_id', 'label' => 'Giata ID', 'align' => 'right'],
+        ['field' => 'name', 'label' => 'Name'],
+        ['field' => 'city', 'label' => 'City'],
+        ['field' => 'destination', 'label' => 'Destination'],
+        ['field' => 'country_code', 'label' => 'Country'],
+        ['field' => 'rating', 'label' => 'Rating', 'align' => 'right'],
+        ['field' => 'address', 'label' => 'Address'],
+        ['field' => 'contact', 'label' => 'Contact'],
+        ['field' => 'geocode', 'label' => 'Geocodes', 'align' => 'right'],
+        ['field' => 'roomtypes', 'label' => 'Roomtypes'],
+        ['field' => 'facts', 'label' => 'Facts']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_chains($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_chains($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['giataId']			.	'</td>';
-		$html	.=	'<td>' . $row['name']				.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="giataId"			data-sortable="true" data-align="right"	>Giata ID</th>'
-			.	'<th scope="col" data-field="name"				data-sortable="true"					>Name</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_chains($dbh);
+    $columns = [
+        ['field' => 'giataId', 'label' => 'Giata ID', 'align' => 'right'],
+        ['field' => 'name', 'label' => 'Name']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_cities($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_cities($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['giataId']			.	'</td>';
-		$html	.=	'<td>' . $row['name']				.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="giataId"			data-sortable="true" data-align="right"	>Giata ID</th>'
-			.	'<th scope="col" data-field="name"				data-sortable="true"					>Name</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_cities($dbh);
+    $columns = [
+        ['field' => 'giataId', 'label' => 'Giata ID', 'align' => 'right'],
+        ['field' => 'name', 'label' => 'Name']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_destinations($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_destinations($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['giataId']			.	'</td>';
-		$html	.=	'<td>' . $row['name']				.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="giataId"			data-sortable="true" data-align="right"	>Giata ID</th>'
-			.	'<th scope="col" data-field="name"				data-sortable="true"					>Name</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_destinations($dbh);
+    $columns = [
+        ['field' => 'giataId', 'label' => 'Giata ID', 'align' => 'right'],
+        ['field' => 'name', 'label' => 'Name']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_roomtypes($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_roomtypes($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['variantId']			.	'</td>';
-		$html	.=	'<td>' . $row['variant']			.	'</td>';
-		$html	.=	'<td>' . $row['category']			.	'</td>';
-		$html	.=	'<td>' . $row['name']				.	'</td>';
-		$html	.=	'<td>' . $row['type']				.	'</td>';
-		$html	.=	'<td>' . $row['view']				.	'</td>';
-		$html	.=	'<td>' . $row['image_relations']	.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="variantId"			data-sortable="true"					>Variant ID</th>'
-			.	'<th scope="col" data-field="variant"			data-sortable="true"					>Variant</th>'
-			.	'<th scope="col" data-field="category"			data-sortable="true"					>Category</th>'
-			.	'<th scope="col" data-field="name"				data-sortable="true"					>Name</th>'
-			.	'<th scope="col" data-field="type"				data-sortable="true"					>Type</th>'
-			.	'<th scope="col" data-field="view"				data-sortable="true"					>View</th>'
-			.	'<th scope="col" data-field="image_relations"	data-sortable="true"					>Images</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_roomtypes($dbh);
+    $columns = [
+        ['field' => 'variantId', 'label' => 'Variant ID'],
+        ['field' => 'variant', 'label' => 'Variant'],
+        ['field' => 'category', 'label' => 'Category'],
+        ['field' => 'name', 'label' => 'Name'],
+        ['field' => 'type', 'label' => 'Type'],
+        ['field' => 'view', 'label' => 'View'],
+        ['field' => 'image_relations', 'label' => 'Images']
+    ];
+    return get_html_table($data, $columns);
 }
 
 function get_html_texts($dbh) {
-
-	$html		=	'';
-	
-	foreach (dbget_giata_texts($dbh) as $row) {
-		
-		$html	.=	'<tr>';
-		$html	.=	'<td>' . $row['giata_id']			.	'</td>';
-		$html	.=	'<td>' . $row['last_update']		.	'</td>';
-		$html	.=	'<td>' . $row['sequence']			.	'</td>';
-		$html	.=	'<td>' . $row['title']				.	'</td>';
-		$html	.=	'<td>' . $row['paragraph']			.	'</td>';
-		$html	.=	'</tr>';
-	}
-
-	$html	=	'<table class="table table-sm"	data-custom-sort=""
-												data-toggle="table"
-												data-pagination="true"
-												data-search="true"
-												data-show-export="true">'
-			.	'<thead><tr>'
-			.	'<th scope="col" data-field="giata_id"			data-sortable="true" data-align="right"	>Giata ID</th>'
-			.	'<th scope="col" data-field="last_update"		data-sortable="true"					>Last Update</th>'
-			.	'<th scope="col" data-field="sequence"			data-sortable="true"					>Sequence</th>'
-			.	'<th scope="col" data-field="title"				data-sortable="true"					>Title</th>'
-			.	'<th scope="col" data-field="paragraph"			data-sortable="true"					>Paragraph</th>'
-			.	'</tr></thead>'
-			.	'<tbody>'
-			.	$html
-			.	'</tbody>'
-			.	'</table>';
-	
-	return $html;
+    $data = dbget_giata_texts($dbh);
+    $columns = [
+        ['field' => 'giata_id', 'label' => 'Giata ID', 'align' => 'right'],
+        ['field' => 'last_update', 'label' => 'Last Update'],
+        ['field' => 'sequence', 'label' => 'Sequence'],
+        ['field' => 'title', 'label' => 'Title'],
+        ['field' => 'paragraph', 'label' => 'Paragraph']
+    ];
+    return get_html_table($data, $columns);
 }
 
 try {
@@ -428,13 +214,9 @@ try {
 	###
 
 } catch (PDOException $e) {
-	
-	echo date("[G:i:s] ") . 'Caught PDOException: ' . $e->getMessage() . '<br/>';
-	
+    logError('Caught PDOException: ' . $e->getMessage());
 } catch (Exception $e) {
-	
-	echo date("[G:i:s] ") . 'Caught Exception: ' . $e->getMessage() . '<br/>';
-	
+    logError('Caught Exception: ' . $e->getMessage());
 } finally {
 
 	###

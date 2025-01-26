@@ -1,12 +1,8 @@
 ﻿<?php
 /*
-
 	SCRIPT:		downloadGiataDrive.php
-	
 	PURPOSE:	Download Drive Content in XML feeds from GIATA and insert the data into the database.
-	
-	Copyright 2024 Fred Onis - All rights reserved.
-
+	COPYRIGHT:  2024 Fred Onis - All rights reserved.
 */
 
 try {
@@ -23,106 +19,77 @@ try {
 	### CUSTOM INIT ROUTINE
 	###
 	
-	$input_urls				=	['https://giatadrive.com/europarcs/xml'];
-	
-	$output_columns_acco	=	['giata_id', 'name', 'city_giata_id', 'destination_giata_id', 'country_code', 'source', 'rating', 'address_street', 'address_streetnum', 'address_zip', 'address_cityname', 'address_pobox', 'address_federalstate_giata_id', 'phone', 'email', 'url', 'geocode_accuracy', 'geocode_latitude', 'geocode_longitude'];
-	$output_columns_acat	=	['giataId', 'factDefId', 'attributeDefId', 'value', 'unitDefId'];
-	$output_columns_acfa	=	['giataId', 'factDefId'];
-	$output_columns_acro	=	['giataId', 'variantId'];
-	$output_columns_acva	=	['giataId', 'factDefId', 'variantId'];
-	$output_columns_chai	=	['giataId', 'name'];
-	$output_columns_citi	=	['giataId', 'name'];
-	$output_columns_dest	=	['giataId', 'name'];
-	$output_columns_fact	=	['giata_id', 'fact_def_id', 'attribute_def_id', 'value'];
-	$output_columns_fede	=	['giataId', 'name', 'code'];
-	$output_columns_imag	=	['giata_id', 'motif_type', 'last_update', 'is_hero_image', 'image_id', 'base_name', 'max_width', 'href'];
-	$output_columns_room	=	['variantId', 'category', 'code', 'name', 'type', 'view', 'category_attribute_id', 'category_attribute_name', 'type_attribute_id', 'type_attribute_name', 'view_attribute_id', 'view_attribute_name', 'image_relations'];
-	$output_columns_text	=	['giata_id', 'last_update', 'sequence', 'title', 'paragraph'];
-	$output_columns_vagr	=	['variantGroupTypeId', 'label'];
-	$output_columns_vari	=	['variantId', 'label'];
-	
-	$output_data_lines		=	0;
+	$inputUrls     = ['https://giatadrive.com/europarcs/xml'];
+	$outputColumns = [
+        'accommodations'					=> ['giata_id', 'name', 'city_giata_id', 'destination_giata_id', 'country_code', 'source', 'rating', 'address_street', 'address_streetnum', 'address_zip', 'address_cityname', 'address_pobox', 'address_federalstate_giata_id', 'phone', 'email', 'url', 'geocode_accuracy', 'geocode_latitude', 'geocode_longitude'],
+        'accommodations_facts'				=> ['giataId', 'factDefId'],
+        'accommodations_facts_attributes'	=> ['giataId', 'factDefId', 'attributeDefId', 'value', 'unitDefId'],
+        'accommodations_facts_variants' 	=> ['giataId', 'factDefId', 'variantId'],
+        'accommodations_roomtypes'			=> ['giataId', 'variantId'],
+        'chains'							=> ['giataId', 'name'],
+        'cities'							=> ['giataId', 'name'],
+        'destinations'						=> ['giataId', 'name'],
+        'images'							=> ['giata_id', 'motif_type', 'last_update', 'is_hero_image', 'image_id', 'base_name', 'max_width', 'href'],
+        'roomtypes'							=> ['variantId', 'category', 'code', 'name', 'type', 'view', 'category_attribute_id', 'category_attribute_name', 'type_attribute_id', 'type_attribute_name', 'view_attribute_id', 'view_attribute_name', 'image_relations'],
+        'texts'								=> ['giata_id', 'last_update', 'sequence', 'title', 'paragraph'],
+        'variant_groups'					=> ['variantGroupTypeId', 'label'],
+        'variants'							=> ['variantId', 'label']
+    ];
 	
 	###
 	### DATABASE INIT ROUTINE
 	###
 	
-	$dbh					=	dbopen($dbconfig);
-	dbtruncate($dbh, 'vendor_giata_accommodations');
-	dbtruncate($dbh, 'vendor_giata_accommodations_facts');
-	dbtruncate($dbh, 'vendor_giata_accommodations_facts_attributes');
-	dbtruncate($dbh, 'vendor_giata_accommodations_facts_variants');
-	dbtruncate($dbh, 'vendor_giata_accommodations_roomtypes');
-	dbtruncate($dbh, 'vendor_giata_chains');
-	dbtruncate($dbh, 'vendor_giata_cities');
-	dbtruncate($dbh, 'vendor_giata_destinations');
-	dbtruncate($dbh, 'vendor_giata_images');
-	dbtruncate($dbh, 'vendor_giata_roomtypes');
-	dbtruncate($dbh, 'vendor_giata_texts');
-	dbtruncate($dbh, 'vendor_giata_variant_groups');
-	dbtruncate($dbh, 'vendor_giata_variants');
+	$dbh    = dbopen($dbconfig);
+    $tables = [
+        'vendor_giata_accommodations',
+        'vendor_giata_accommodations_facts',
+        'vendor_giata_accommodations_facts_attributes',
+        'vendor_giata_accommodations_facts_variants',
+        'vendor_giata_accommodations_roomtypes',
+        'vendor_giata_chains',
+        'vendor_giata_cities',
+        'vendor_giata_destinations',
+        'vendor_giata_images',
+        'vendor_giata_roomtypes',
+        'vendor_giata_texts',
+        'vendor_giata_variant_groups',
+        'vendor_giata_variants'
+    ];
+    foreach ($tables as $table) {
+        dbtruncate($dbh, $table);
+    }
 
 	###
 	### PROCESSING ROUTINE
 	###
 
-	foreach ($input_urls as $input_url) {
+	foreach ($inputUrls as $inputUrl) {
 		
-		echo date("[G:i:s] ") . 'Reading XML Feed ' . $input_url . PHP_EOL;
+		echo date("[G:i:s] ") . 'Reading XML Feed ' . $inputUrl . PHP_EOL;
 
-		# Read XML contents
-		if (($contents = file_get_contents($input_url)) !== false) {
+		if (($contents = file_get_contents($inputUrl)) !== false) {
 
-			$xml				=	simplexml_load_string($contents);
-			$output_values_chai	=	[];
-			$output_values_citi	=	[];
-			$output_values_dest	=	[];
-			$output_values_room	=	[];
-			$output_values_vagr	=	[];
-			$output_values_vari	=	[];
+			$xml          = simplexml_load_string($contents);
+            $outputValues = initializeVariousContent();
 	
-			# Find open content for all accommodations
 			foreach ($xml->url as $url) {
 				
 				echo date("[G:i:s] ") . '- Reading XML Feed ' . $url->loc . PHP_EOL;
 				
-				# Read XML contents
 				if (($contents = file_get_contents($url->loc)) !== false) {
 					
-					$xml				=	simplexml_load_string($contents);
-					$output_values_fact	=	[];
-					$output_values_fede	=	[];
-					
-					# Collect all content
-					giata_accommodation(					$dbh, $xml, $output_columns_acco);
-					giata_images(							$dbh, $xml, $output_columns_imag);
-					giata_texts(							$dbh, $xml, $output_columns_text);
-					giata_accommodation_facts(				$dbh, $xml, $output_columns_acfa);
-					giata_accommodation_facts_attributes(	$dbh, $xml, $output_columns_acat);
-					giata_accommodation_facts_variants(		$dbh, $xml, $output_columns_acva);
-					giata_accommodation_roomtypes(			$dbh, $xml, $output_columns_acro);
-
-					giata_chains(			$xml, $output_values_chai);
-					giata_cities(			$xml, $output_values_citi);
-					giata_destinations(		$xml, $output_values_dest);
-					giata_roomtypes(		$xml, $output_values_room);
-					giata_variant_groups(	$xml, $output_values_vagr);
-					giata_variants(			$xml, $output_values_vari);
-					
-					$output_data_lines++;
+					$xml = simplexml_load_string($contents);
+                    processContent($dbh, $xml, $outputColumns, $outputValues);
+                    $outputDataLines++;
 				}
 			}
 			
-			dbinsert($dbh, 'vendor_giata_chains',					$output_columns_chai,	array_unique($output_values_chai));
-			dbinsert($dbh, 'vendor_giata_cities',					$output_columns_citi,	array_unique($output_values_citi));
-			dbinsert($dbh, 'vendor_giata_destinations',				$output_columns_dest,	array_unique($output_values_dest));
-			dbinsert($dbh, 'vendor_giata_roomtypes',				$output_columns_room,	array_unique($output_values_room));
-			dbinsert($dbh, 'vendor_giata_variant_groups',			$output_columns_vagr,	array_unique($output_values_vagr));
-			dbinsert($dbh, 'vendor_giata_variants',					$output_columns_vari,	array_unique($output_values_vari));
+            insertVariousContent($dbh, $outputColumns, $outputValues);
 		}
 	}
 	
-	echo date("[G:i:s] ") . '- ' . $output_data_lines . ' rows processed' . PHP_EOL;
+	echo date("[G:i:s] ") . '- ' . $outputDataLines . ' rows processed' . PHP_EOL;
 
 	###
 	### DATABASE EXIT ROUTINE
@@ -135,13 +102,9 @@ try {
 	###
 
 } catch (PDOException $e) {
-	
-	echo date("[G:i:s] ") . 'Caught PDOException: ' . $e->getMessage() . PHP_EOL;
-	
+    logError('Caught PDOException: ' . $e->getMessage());
 } catch (Exception $e) {
-	
-	echo date("[G:i:s] ") . 'Caught Exception: '    . $e->getMessage() . PHP_EOL;
-	
+    logError('Caught Exception: '    . $e->getMessage());
 } finally {
 
 	###
