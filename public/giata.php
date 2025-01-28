@@ -1,23 +1,40 @@
 ﻿<?php
-/*
-	SCRIPT:		index.php
-	PURPOSE:	Show data from Giata in a dashboard.
-	COPYRIGHT:  2024 Fred Onis - All rights reserved.
-	
-	get_html_definitions_attributes
-	get_html_definitions_contexttree
-	get_html_definitions_facts
-	get_html_definitions_motif_types
-	get_html_definitions_units
-	
-	get_html_accommodations
-	get_html_chains
-	get_html_cities
-	get_html_destinations
-	get_html_roomtypes
-	get_html_texts
-
-*/
+/**
+ * SCRIPT: giata.php
+ * PURPOSE: Show data from Giata in a dashboard.
+ * 
+ * This script generates a web-based dashboard to display data from Giata. It fetches data from the database
+ * and presents it in various HTML tables. The dashboard includes information on accommodations, chains, cities,
+ * destinations, images, room types, texts, variant groups, and variants. The script ensures that the data is
+ * presented in a user-friendly manner, allowing for easy navigation and interaction.
+ * 
+ * @package giata-opencontent
+ * @version 1.0.0
+ * @since 2024
+ * @license MIT
+ * 
+ * COPYRIGHT: 2024 Fred Onis - All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * 
+ * @author Fred Onis
+ */
 
 /**
  * Generates an HTML table with the given data and columns.
@@ -48,6 +65,15 @@ function get_html_table($data, $columns) {
     return $html;
 }
 
+/**
+ * Generates an HTML table for attribute definitions.
+ *
+ * This function retrieves attribute definitions from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_definitions_attributes($dbh) {
     $data = dbget_giata_definitions_attributes($dbh);
     $columns = [
@@ -59,6 +85,15 @@ function get_html_definitions_attributes($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for context tree definitions.
+ *
+ * This function retrieves context tree definitions from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_definitions_contexttree($dbh) {
     $data = dbget_giata_definitions_contexttree($dbh);
     $columns = [
@@ -70,6 +105,15 @@ function get_html_definitions_contexttree($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for fact definitions.
+ *
+ * This function retrieves fact definitions from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_definitions_facts($dbh) {
     $data = dbget_giata_definitions_facts($dbh);
     $columns = [
@@ -79,6 +123,15 @@ function get_html_definitions_facts($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for motif type definitions.
+ *
+ * This function retrieves motif type definitions from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_definitions_motif_types($dbh) {
     $data = dbget_giata_definitions_motif_types($dbh);
     $columns = [
@@ -88,6 +141,15 @@ function get_html_definitions_motif_types($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for unit definitions.
+ *
+ * This function retrieves unit definitions from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_definitions_units($dbh) {
     $data = dbget_giata_definitions_units($dbh);
     $columns = [
@@ -97,6 +159,15 @@ function get_html_definitions_units($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for accommodations.
+ *
+ * This function retrieves accommodations data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_accommodations($dbh) {
     $data = dbget_giata_accommodations($dbh);
     $columns = [
@@ -115,6 +186,15 @@ function get_html_accommodations($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for chains.
+ *
+ * This function retrieves chains data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_chains($dbh) {
     $data = dbget_giata_chains($dbh);
     $columns = [
@@ -124,6 +204,15 @@ function get_html_chains($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for cities.
+ *
+ * This function retrieves cities data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_cities($dbh) {
     $data = dbget_giata_cities($dbh);
     $columns = [
@@ -133,6 +222,15 @@ function get_html_cities($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for destinations.
+ *
+ * This function retrieves destinations data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_destinations($dbh) {
     $data = dbget_giata_destinations($dbh);
     $columns = [
@@ -142,6 +240,15 @@ function get_html_destinations($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for room types.
+ *
+ * This function retrieves room types data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_roomtypes($dbh) {
     $data = dbget_giata_roomtypes($dbh);
     $columns = [
@@ -156,6 +263,15 @@ function get_html_roomtypes($dbh) {
     return get_html_table($data, $columns);
 }
 
+/**
+ * Generates an HTML table for texts.
+ *
+ * This function retrieves texts data from the database, prepares the columns,
+ * and generates an HTML table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @return string The generated HTML table as a string.
+ */
 function get_html_texts($dbh) {
     $data = dbget_giata_texts($dbh);
     $columns = [

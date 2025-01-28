@@ -1,9 +1,40 @@
 ﻿<?php
-/*
-	SCRIPT:		downloadGiataDefinitions.php
-	PURPOSE:	Download the definitions in a JSON feed from GIATA and insert the data into the database.
-	COPYRIGHT:  2024 Fred Onis - All rights reserved.
-*/
+/**
+ * SCRIPT: downloadGiataDefinitions.php
+ * PURPOSE: Download the definitions in a JSON feed from GIATA and insert the data into the database.
+ * 
+ * This script fetches JSON data from a specified GIATA URL, processes the data, and inserts it into
+ * the appropriate database tables. It handles various types of definitions such as context trees, facts,
+ * attributes, units, and motif types. The script ensures that the database is updated with the latest
+ * definitions from the GIATA feed.
+ * 
+ * @package giata-opencontent
+ * @version 1.0.0
+ * @since 2024
+ * @license MIT
+ * 
+ * COPYRIGHT: 2024 Fred Onis - All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * 
+ * @author Fred Onis
+ */
 
 try {
 	
@@ -72,24 +103,64 @@ try {
         ];
 
 		foreach ($decodedJson as $language => $subjects) {
+			
 			foreach ($subjects as $subject => $array) {
+			
 				foreach ($array as $key => $values) {
+				
 					switch ($subject) {
+						
 						case 'contextTree':
-                            processContextTree(	$key, $values, $outputValues, $outputDataLines);
+							$outputValues['contexttree'][]	=	"('" . $key . "', '" . addslashes($values['label']) . "', '" . "" . "')";
+							$outputDataLines++;
+							foreach ($values['facts'] as $factId) {
+								$outputValues['contexttree_facts'][]	=	"('" . $key . "', '" . $factId . "')";
+								$outputDataLines++;
+							}
+							if (array_key_exists('sub', $values)) {
+								foreach ($values['sub'] as $key2 => $values2) {
+									$outputValues['contexttree'][]	=	"('" . $key2 . "', '" . addslashes($values2['label']) . "', '" . $key . "')";
+									foreach ($values2['facts'] as $factId) {
+										$outputValues['contexttree_facts'][]	=	"('" . $key2 . "', '" . $factId . "')";
+										$outputDataLines++;
+									}
+								}
+							}
 							break;
 						case 'facts':
-                            processFacts(		$key, $values, $outputValues, $outputDataLines);
+							$outputValues['facts'][]	=	"('" . $key . "', '" . addslashes($values['label']) . "')";
+							$outputDataLines++;
+							foreach ($values['attributes'] as $fact_attribute) {
+								$outputValues['facts_attributes'][]	=	"('" . $key . "', '" . $fact_attribute . "')";
+								$outputDataLines++;
+							}
+							if (array_key_exists('variantGroupTypes', $values)) {
+								foreach ($values['variantGroupTypes'] as $fact_variantGroupType) {
+									$outputValues['facts_variantgrouptypes'][]	=	"('" . $key . "', '" . $fact_variantGroupType . "')";
+									$outputDataLines++;
+								}
+							}
 							break;
 						case 'attributes':
-                            processAttributes(	$key, $values, $outputValues, $outputDataLines);
+							if (array_key_exists('valueType', $values)) {
+								$valueType	=	$values['valueType'];
+							} else {
+								$valueType	=	'';
+							}
+							if (array_key_exists('units', $values)) {
+								$units	=	implode('|', $values['units']);
+							} else {
+								$units	=	'';
+							}
+							$outputValues['attributes'][]	=	"('" . $key . "', '" . addslashes($values['label']) . "', '" . $valueType . "', '" . $units . "')";
+							$outputDataLines++;
 							break;
 						case 'units':
-                            $outputValues['units'][]		= prepareValues($key, $values['label']);
+							$outputValues['units'][]	    =	"('" . $key . "', '" . addslashes($values['label']) . "')";
 							$outputDataLines++;
 							break;
 						case 'motifTypes':
-                            $outputValues['motif_types'][]	= prepareValues($key, $values['label']);
+							$outputValues['motif_types'][]	=	"('" . $key . "', '" . addslashes($values['label']) . "')";
 							$outputDataLines++;
 							break;
 						default:
@@ -97,9 +168,14 @@ try {
 				}
 			}
 		}
-		foreach ($outputValues as $table => $values) {
-            dbinsert($dbh, 'vendor_giata_definitions_' . $table, $outputColumns[$table], array_unique($values));
-        }
+		dbinsert($dbh, 'vendor_giata_definitions_attributes',				$outputColumns['attributes'],	            array_unique($outputValues['attributes']));
+		dbinsert($dbh, 'vendor_giata_definitions_contexttree',				$outputColumns['contexttree'],	            array_unique($outputValues['contexttree']));
+		dbinsert($dbh, 'vendor_giata_definitions_contexttree_facts',		$outputColumns['contexttree_facts'],	    array_unique($outputValues['contexttree_facts']));
+		dbinsert($dbh, 'vendor_giata_definitions_facts',					$outputColumns['facts'],	                array_unique($outputValues['facts']));
+		dbinsert($dbh, 'vendor_giata_definitions_facts_attributes',			$outputColumns['facts_attributes'],	        array_unique($outputValues['facts_attributes']));
+		dbinsert($dbh, 'vendor_giata_definitions_facts_variantgrouptypes',	$outputColumns['facts_variantgrouptypes'],	array_unique($outputValues['facts_variantgrouptypes']));
+		dbinsert($dbh, 'vendor_giata_definitions_motif_types',				$outputColumns['motif_types'],	            array_unique($outputValues['motif_types']));
+		dbinsert($dbh, 'vendor_giata_definitions_units',					$outputColumns['units'],	                array_unique($outputValues['units']));
 	}
 	
 	echo date("[G:i:s] ") . '- ' . $outputDataLines . ' rows processed' . PHP_EOL;
@@ -125,44 +201,4 @@ try {
 	###
 
 	require 'includes/exit.inc.php';
-}
-
-function processContextTree($key, $values, &$outputValues, &$outputDataLines) {
-    $outputValues['contexttree'][] = prepareValues($key, $values['label'], '');
-    $outputDataLines++;
-    foreach ($values['facts'] as $factId) {
-        $outputValues['contexttree_facts'][] = prepareValues($key, $factId);
-        $outputDataLines++;
-    }
-    if (array_key_exists('sub', $values)) {
-        foreach ($values['sub'] as $key2 => $values2) {
-            $outputValues['contexttree'][] = prepareValues($key2, $values2['label'], $key);
-            foreach ($values2['facts'] as $factId) {
-                $outputValues['contexttree_facts'][] = prepareValues($key2, $factId);
-                $outputDataLines++;
-            }
-        }
-    }
-}
-
-function processFacts($key, $values, &$outputValues, &$outputDataLines) {
-    $outputValues['facts'][] = prepareValues($key, $values['label']);
-    $outputDataLines++;
-    foreach ($values['attributes'] as $factAttribute) {
-        $outputValues['facts_attributes'][] = prepareValues($key, $factAttribute);
-        $outputDataLines++;
-    }
-    if (array_key_exists('variantGroupTypes', $values)) {
-        foreach ($values['variantGroupTypes'] as $factVariantGroupType) {
-            $outputValues['facts_variantgrouptypes'][] = prepareValues($key, $factVariantGroupType);
-            $outputDataLines++;
-        }
-    }
-}
-
-function processAttributes($key, $values, &$outputValues, &$outputDataLines) {
-    $valueType = $values['valueType'] ?? '';
-    $units = array_key_exists('units', $values) ? implode('|', $values['units']) : '';
-    $outputValues['attributes'][] = prepareValues($key, $values['label'], $valueType, $units);
-    $outputDataLines++;
 }

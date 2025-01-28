@@ -1,43 +1,57 @@
 <?php
-/*
-	SCRIPT:		vendor_giata_func.inc.php
-	PURPOSE:	Functions for Giata cronjobs.
-	COPYRIGHT:  2024 Fred Onis - All rights reserved.
+/**
+ * SCRIPT: vendor_giata_func.inc.php
+ * PURPOSE: Functions for Giata cronjobs.
+ * 
+ * This script contains various utility functions used in Giata cronjobs. These functions
+ * handle tasks such as extracting data from XML feeds, preparing values for database insertion,
+ * and logging errors. The functions are designed to work with the Giata data model and 
+ * facilitate the processing and storage of Giata data in a database.
+ * 
+ * @package giata-opencontent
+ * @version 1.0.0
+ * @since 2024
+ * @license MIT
+ * 
+ * COPYRIGHT: 2024 Fred Onis - All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * 
+ * @author Fred Onis
+ */
 
-	getAccommodationEmail
-	getAccommodationName
-	getAccommodationPhone
-	getAccommodationRating
-	getChains
-	getCities
-	getDestinations
-	getRoomtypes
-	getVariantGroups
-	getVariants
-
-	initializeVariousContent
-
-	insertAccommodation
-	insertAccommodationFacts
-	insertAccommodationFactsAttributes
-	insertAccommodationFactsVariants
-	insertAccommodationRoomtypes
-	insertImages
-	insertTexts
-	insertVariousContent
-
-	logError
-	logMultipleEntries
-
-	prepareValues
-
-	processContent
-*/
-
+/**
+ * Retrieves the email address of the accommodation from the XML data.
+ *
+ * @param SimpleXMLElement $xml The XML data containing accommodation information.
+ * @return string The email address of the accommodation.
+ */
 function getAccommodationEmail($xml) {
     return $xml->emails->email ?? '';
 }
 
+/**
+ * Retrieves the name of the accommodation from the XML data.
+ *
+ * @param SimpleXMLElement $xml The XML data containing accommodation information.
+ * @return string The name of the accommodation.
+ */
 function getAccommodationName($xml) {
     foreach ($xml->names->name as $name) {
         if ($name['locale'] == 'nl' || $name['isDefault'] == 'true') {
@@ -47,6 +61,12 @@ function getAccommodationName($xml) {
     return '';
 }
 
+/**
+ * Retrieves the phone number of the accommodation from the XML data.
+ *
+ * @param SimpleXMLElement $xml The XML data containing accommodation information.
+ * @return string The phone number of the accommodation.
+ */
 function getAccommodationPhone($xml) {
 	if (is_iterable($xml->phones->phone)) {
         foreach ($xml->phones->phone as $phone) {
@@ -58,6 +78,12 @@ function getAccommodationPhone($xml) {
     return '';
 }
 
+/**
+ * Retrieves the rating of the accommodation from the XML data.
+ *
+ * @param SimpleXMLElement $xml The XML data containing accommodation information.
+ * @return string The rating of the accommodation.
+ */
 function getAccommodationRating($xml) {
 	if (is_iterable($xml->ratings->rating)) {
  	   foreach ($xml->ratings->rating as $rating) {
@@ -69,12 +95,24 @@ function getAccommodationRating($xml) {
     return '';
 }
 
+/**
+ * Processes chain data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing chain information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getChains($xml, &$output_values) {
     if (isset($xml->chains)) {
         $output_values[] = prepareValues($xml->chains->chain['giataId'], addslashes(trim($xml->chains->chain->names->name)));
     }
 }
 
+/**
+ * Processes city data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing city information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getCities($xml, &$output_values) {
     if (isset($xml->city)) {
         foreach ($xml->city->names->name as $name) {
@@ -85,6 +123,12 @@ function getCities($xml, &$output_values) {
     }
 }
 
+/**
+ * Processes destination data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing destination information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getDestinations($xml, &$output_values) {
     if (isset($xml->destination)) {
         foreach ($xml->destination->names->name as $name) {
@@ -95,6 +139,12 @@ function getDestinations($xml, &$output_values) {
     }
 }
 
+/**
+ * Processes room type data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing room type information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getRoomtypes($xml, &$output_values) {
     if (isset($xml->roomTypes)) {
         foreach ($xml->roomTypes->roomType as $roomtype) {
@@ -121,6 +171,12 @@ function getRoomtypes($xml, &$output_values) {
     }
 }
 
+/**
+ * Processes variant group data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing variant group information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getVariantGroups($xml, &$output_values) {
     if (isset($xml->variantGroups)) {
         foreach ($xml->variantGroups->variantGroup as $variantGroup) {
@@ -131,6 +187,12 @@ function getVariantGroups($xml, &$output_values) {
     }
 }
 
+/**
+ * Processes variant data from the XML and prepares it for database insertion.
+ *
+ * @param SimpleXMLElement $xml The XML data containing variant information.
+ * @param array &$output_values The array to store prepared values for database insertion.
+ */
 function getVariants($xml, &$output_values) {
     if (isset($xml->variantGroups) && isset($xml->variantGroups->variantGroup)) {
         foreach ($xml->variantGroups->variantGroup->variants->variant as $variant) {
@@ -141,6 +203,15 @@ function getVariants($xml, &$output_values) {
     }
 }
 
+/**
+ * Initializes an array to store various types of content for database insertion.
+ *
+ * This function returns an associative array with keys for different types of content,
+ * each initialized to an empty array. The keys include 'chains', 'cities', 'destinations',
+ * 'roomtypes', 'variant_groups', and 'variants'.
+ *
+ * @return array An associative array with keys for different types of content, each initialized to an empty array.
+ */
 function initializeVariousContent() {
     return [
         'chains'         => [],
@@ -152,6 +223,17 @@ function initializeVariousContent() {
     ];
 }
 
+/**
+ * Inserts accommodation data from the XML into the database.
+ *
+ * This function processes the XML data for an accommodation, logs any multiple entries,
+ * retrieves various accommodation details, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_accommodations' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing accommodation information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertAccommodation($dbh, $xml, $output_columns) {
 	
     logMultipleEntries($dbh, $xml, 'addresses', 'address', 'Multiple addresses for ');
@@ -194,6 +276,16 @@ function insertAccommodation($dbh, $xml, $output_columns) {
 	return;
 }
 
+/**
+ * Inserts accommodation facts data from the XML into the database.
+ *
+ * This function processes the XML data for accommodation facts, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_accommodations_facts' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing accommodation facts information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertAccommodationFacts($dbh, $xml, $output_columns) {
     $output_values = [];
     foreach ($xml->facts->fact as $fact) {
@@ -202,6 +294,16 @@ function insertAccommodationFacts($dbh, $xml, $output_columns) {
     dbinsert($dbh, 'vendor_giata_accommodations_facts', $output_columns, array_unique($output_values));
 }
 
+/**
+ * Inserts accommodation facts attributes data from the XML into the database.
+ *
+ * This function processes the XML data for accommodation facts attributes, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_accommodations_facts_attributes' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing accommodation facts attributes information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertAccommodationFactsAttributes($dbh, $xml, $output_columns) {
     $output_values = [];
     foreach ($xml->facts->fact as $fact) {
@@ -220,6 +322,16 @@ function insertAccommodationFactsAttributes($dbh, $xml, $output_columns) {
     dbinsert($dbh, 'vendor_giata_accommodations_facts_attributes', $output_columns, array_unique($output_values));
 }
 
+/**
+ * Inserts accommodation facts variants data from the XML into the database.
+ *
+ * This function processes the XML data for accommodation facts variants, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_accommodations_facts_variants' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing accommodation facts variants information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertAccommodationFactsVariants($dbh, $xml, $output_columns) {
     $output_values = [];
     foreach ($xml->facts->fact as $fact) {
@@ -232,6 +344,16 @@ function insertAccommodationFactsVariants($dbh, $xml, $output_columns) {
     dbinsert($dbh, 'vendor_giata_accommodations_facts_variants', $output_columns, array_unique($output_values));
 }
 
+/**
+ * Inserts accommodation room types data from the XML into the database.
+ *
+ * This function processes the XML data for accommodation room types, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_accommodations_roomtypes' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing accommodation room types information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertAccommodationRoomtypes($dbh, $xml, $output_columns) {
     if (isset($xml->roomTypes)) {
         $output_values = [];
@@ -242,6 +364,16 @@ function insertAccommodationRoomtypes($dbh, $xml, $output_columns) {
     }
 }
 
+/**
+ * Inserts image data from the XML into the database.
+ *
+ * This function processes the XML data for images, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_images' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing image information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertImages($dbh, $xml, $output_columns) {
     if (!empty($xml->images)) {
         $output_values = [];
@@ -263,6 +395,16 @@ function insertImages($dbh, $xml, $output_columns) {
     }
 }
 
+/**
+ * Inserts text data from the XML into the database.
+ *
+ * This function processes the XML data for texts, prepares the values for database insertion,
+ * and inserts the data into the 'vendor_giata_texts' table.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing text information.
+ * @param array $output_columns The columns to insert values into.
+ */
 function insertTexts($dbh, $xml, $output_columns) {
     if (isset($xml->texts)) {
         $output_values = [];
@@ -284,6 +426,16 @@ function insertTexts($dbh, $xml, $output_columns) {
     }
 }
 
+/**
+ * Inserts various types of content into the database.
+ *
+ * This function inserts various types of content such as chains, cities, destinations, room types,
+ * variant groups, and variants into their respective database tables.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param array $output_columns The columns to insert values into for each type of content.
+ * @param array $output_values The values to be inserted into the database for each type of content.
+ */
 function insertVariousContent($dbh, $output_columns, $output_values) {
     dbinsert($dbh, 'vendor_giata_chains',         $output_columns['chains'],         array_unique($output_values['chains']));
     dbinsert($dbh, 'vendor_giata_cities',         $output_columns['cities'],         array_unique($output_values['cities']));
@@ -293,12 +445,30 @@ function insertVariousContent($dbh, $output_columns, $output_values) {
     dbinsert($dbh, 'vendor_giata_variants',       $output_columns['variants'],       array_unique($output_values['variants']));
 }
 
+/**
+ * Logs an error message.
+ *
+ * This function logs an error message to the console and optionally to a file.
+ *
+ * @param string $message The error message to log.
+ */
 function logError($message) {
     echo date("[G:i:s] ") . $message . PHP_EOL;
     // Optionally log to a file
     // error_log($message, 3, '/path/to/error.log');
 }
 
+/**
+ * Logs multiple entries for a specific XML element.
+ *
+ * This function checks if there are multiple entries for a specific XML element and logs a message if there are.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing the information.
+ * @param string $parent The parent XML element.
+ * @param string $child The child XML element.
+ * @param string $message The message to log if multiple entries are found.
+ */
 function logMultipleEntries($dbh, $xml, $parent, $child, $message) {
 	if (is_countable($xml->$parent->$child)) {
 	    if (count($xml->$parent->$child) > 1) {
@@ -308,10 +478,30 @@ function logMultipleEntries($dbh, $xml, $parent, $child, $message) {
 	}
 }
 
+/**
+ * Prepares values for database insertion.
+ *
+ * This function takes multiple values, escapes them, and formats them as a single string for database insertion.
+ *
+ * @param mixed ...$values The values to prepare for database insertion.
+ * @return string The prepared values formatted as a single string for database insertion.
+ */
 function prepareValues(...$values) {
     return "('" . implode("', '", array_map('addslashes', $values)) . "')";
 }
 
+/**
+ * Processes the XML content and inserts various types of data into the database.
+ *
+ * This function processes the XML content for accommodations, images, texts, accommodation facts,
+ * accommodation facts attributes, accommodation facts variants, and accommodation room types.
+ * It also retrieves and prepares data for chains, cities, destinations, room types, variant groups, and variants.
+ *
+ * @param PDO $dbh The PDO database connection handle.
+ * @param SimpleXMLElement $xml The XML data containing the content information.
+ * @param array $outputColumns The columns to insert values into for each type of content.
+ * @param array &$outputValues The array to store prepared values for database insertion.
+ */
 function processContent($dbh, $xml, $outputColumns, &$outputValues) {
     insertAccommodation(               $dbh, $xml, $outputColumns['accommodations']);
     insertImages(                      $dbh, $xml, $outputColumns['images']);
