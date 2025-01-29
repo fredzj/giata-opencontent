@@ -79,7 +79,7 @@ function dbget_giata_ids($dbh) {
  * @param array $columns The columns to insert values into.
  * @param array $values The values to insert.
  */
- function dbinsert($dbh, $table, $columns, $values) {
+function dbinsert($dbh, $table, $columns, $values) {
 
 	if (count($values) > 0) {
 		
