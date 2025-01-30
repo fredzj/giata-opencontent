@@ -39,6 +39,7 @@ class GiataDefinitionsImporter {
     private $outputColumns;
     private $outputValues;
     private $outputDataLines = 0;
+    private $timeStart;
 
     /**
      * GiataDefinitionsImporter constructor.
@@ -51,6 +52,7 @@ class GiataDefinitionsImporter {
         $this->url = $url;
         $this->initializeOutputColumns();
         $this->initializeOutputValues();
+        $this->registerExitHandler();
     }
 
     /**
@@ -83,6 +85,16 @@ class GiataDefinitionsImporter {
             'motif_types'               => [],
             'units'                     => []
         ];
+    }
+
+    /**
+     * Register the exit handler.
+     *
+     * @return void
+     */
+    private function registerExitHandler() {
+        $this->timeStart = microtime(true);
+        register_shutdown_function([new ExitHandler($this->timeStart), 'handleExit']);
     }
 
     /**

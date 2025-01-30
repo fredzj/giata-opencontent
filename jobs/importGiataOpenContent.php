@@ -36,7 +36,7 @@
  * @author Fred Onis
  */
 
- require 'classes/Database.php';
+require 'classes/Database.php';
 require 'classes/GiataOpenContentImporter.php';
 require 'classes/ExitHandler.php';
 
@@ -46,15 +46,10 @@ mb_internal_encoding(		'UTF-8');
 setlocale(LC_ALL,			'nl_NL.utf8');
 
 // Parse the DB configuration file
-$path		=	substr(__DIR__, 0, mb_strrpos(__DIR__, '/'));
-$filename	=	$path . '/config/db.ini';
+$filename = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
 if (($dbConfig = parse_ini_file($filename, FALSE, INI_SCANNER_TYPED)) === FALSE) {
 	throw new Exception("Parsing file " . $filename	. " FAILED");
 }
-
-// Register the exit handler
-$timeStart			=	microtime(true);
-register_shutdown_function([new ExitHandler($timeStart), 'handleExit']);
 
 // URLs to fetch XML data from
 $inputUrls = ['https://giatadrive.com/europarcs/xml', 'https://myhotel.giatamedia.com/hotel-directory/xml'];

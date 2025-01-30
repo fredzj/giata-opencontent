@@ -39,6 +39,7 @@ class GiataOpenContentImporter {
     private $outputColumns;
     private $outputValues;
     private $outputDataLines = 0;
+    private $timeStart;
 
     /**
      * GiataOpenContentImporter constructor.
@@ -51,6 +52,7 @@ class GiataOpenContentImporter {
         $this->inputUrls = $inputUrls;
         $this->initializeOutputColumns();
         $this->initializeOutputValues();
+        $this->registerExitHandler();
     }
 
     /**
@@ -58,19 +60,19 @@ class GiataOpenContentImporter {
      */
     private function initializeOutputColumns() {
         $this->outputColumns = [
-            'accommodations'                => ['giata_id', 'name', 'city_giata_id', 'destination_giata_id', 'country_code', 'source', 'rating', 'address_street', 'address_streetnum', 'address_zip', 'address_cityname', 'address_pobox', 'address_federalstate_giata_id', 'phone', 'email', 'url', 'geocode_accuracy', 'geocode_latitude', 'geocode_longitude'],
-            'accommodations_facts'          => ['giataId', 'factDefId'],
+            'accommodations'                 => ['giata_id', 'name', 'city_giata_id', 'destination_giata_id', 'country_code', 'source', 'rating', 'address_street', 'address_streetnum', 'address_zip', 'address_cityname', 'address_pobox', 'address_federalstate_giata_id', 'phone', 'email', 'url', 'geocode_accuracy', 'geocode_latitude', 'geocode_longitude'],
+            'accommodations_facts'           => ['giataId', 'factDefId'],
             'accommodations_facts_attributes'=> ['giataId', 'factDefId', 'attributeDefId', 'value', 'unitDefId'],
-            'accommodations_facts_variants' => ['giataId', 'factDefId', 'variantId'],
-            'accommodations_roomtypes'      => ['giataId', 'variantId'],
-            'chains'                        => ['giataId', 'name'],
-            'cities'                        => ['giataId', 'name'],
-            'destinations'                  => ['giataId', 'name'],
-            'images'                        => ['giata_id', 'motif_type', 'last_update', 'is_hero_image', 'image_id', 'base_name', 'max_width', 'href'],
-            'roomtypes'                     => ['variantId', 'category', 'code', 'name', 'type', 'view', 'category_attribute_id', 'category_attribute_name', 'type_attribute_id', 'type_attribute_name', 'view_attribute_id', 'view_attribute_name', 'image_relations'],
-            'texts'                         => ['giata_id', 'last_update', 'sequence', 'title', 'paragraph'],
-            'variant_groups'                => ['variantGroupTypeId', 'label'],
-            'variants'                      => ['variantId', 'label']
+            'accommodations_facts_variants'  => ['giataId', 'factDefId', 'variantId'],
+            'accommodations_roomtypes'       => ['giataId', 'variantId'],
+            'chains'                         => ['giataId', 'name'],
+            'cities'                         => ['giataId', 'name'],
+            'destinations'                   => ['giataId', 'name'],
+            'images'                         => ['giata_id', 'motif_type', 'last_update', 'is_hero_image', 'image_id', 'base_name', 'max_width', 'href'],
+            'roomtypes'                      => ['variantId', 'category', 'code', 'name', 'type', 'view', 'category_attribute_id', 'category_attribute_name', 'type_attribute_id', 'type_attribute_name', 'view_attribute_id', 'view_attribute_name', 'image_relations'],
+            'texts'                          => ['giata_id', 'last_update', 'sequence', 'title', 'paragraph'],
+            'variant_groups'                 => ['variantGroupTypeId', 'label'],
+            'variants'                       => ['variantId', 'label']
         ];
     }
 
@@ -79,20 +81,30 @@ class GiataOpenContentImporter {
      */
     private function initializeOutputValues() {
         $this->outputValues = [
-            'accommodations'                => [],
-            'accommodations_facts'          => [],
+            'accommodations'                 => [],
+            'accommodations_facts'           => [],
             'accommodations_facts_attributes'=> [],
-            'accommodations_facts_variants' => [],
-            'accommodations_roomtypes'      => [],
-            'chains'                        => [],
-            'cities'                        => [],
-            'destinations'                  => [],
-            'images'                        => [],
-            'roomtypes'                     => [],
-            'texts'                         => [],
-            'variant_groups'                => [],
-            'variants'                      => []
+            'accommodations_facts_variants'  => [],
+            'accommodations_roomtypes'       => [],
+            'chains'                         => [],
+            'cities'                         => [],
+            'destinations'                   => [],
+            'images'                         => [],
+            'roomtypes'                      => [],
+            'texts'                          => [],
+            'variant_groups'                 => [],
+            'variants'                       => []
         ];
+    }
+
+    /**
+     * Register the exit handler.
+     *
+     * @return void
+     */
+    private function registerExitHandler() {
+        $this->timeStart = microtime(true);
+        register_shutdown_function([new ExitHandler($this->timeStart), 'handleExit']);
     }
 
     /**
