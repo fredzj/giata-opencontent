@@ -36,7 +36,7 @@
  * @author Fred Onis
  */
 
- require 'classes/Database.php';
+require 'classes/Database.php';
 require 'classes/GiataDefinitionsImporter.php';
 require 'classes/ExitHandler.php';
 
