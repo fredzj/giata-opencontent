@@ -1,4 +1,5 @@
 ﻿<?php
+header('Content-Type: text/html; charset=utf-8');
 /**
  * SCRIPT: giata.php
  * PURPOSE: Show data from Giata in a dashboard.

@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `vendor_giata_accommodations_facts_attributes` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
-  `id` smallint(5) UNSIGNED NOT NULL,
+  `id` mediumint(5) UNSIGNED NOT NULL,
   `giataId` int(10) UNSIGNED NOT NULL,
   `factDefId` smallint(5) UNSIGNED NOT NULL,
   `attributeDefId` smallint(5) UNSIGNED DEFAULT NULL,

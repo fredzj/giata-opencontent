@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `vendor_giata_accommodations_facts` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
-  `id` smallint(5) UNSIGNED NOT NULL,
+  `id` mediumint(5) UNSIGNED NOT NULL,
   `giataId` int(10) UNSIGNED NOT NULL,
   `factDefId` smallint(5) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
