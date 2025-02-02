@@ -45,19 +45,12 @@ date_default_timezone_set(	'Europe/Amsterdam');
 mb_internal_encoding(		'UTF-8');
 setlocale(LC_ALL,			'nl_NL.utf8');
 
-// Parse the DB configuration file
-$filename = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
-if (($dbConfig = parse_ini_file($filename, FALSE, INI_SCANNER_TYPED)) === FALSE) {
-	throw new Exception("Parsing file " . $filename	. " FAILED");
-}
-
-// URLs to fetch XML data from
+$dbConfigPath = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
 $inputUrls = ['https://giatadrive.com/europarcs/xml', 'https://myhotel.giatamedia.com/hotel-directory/xml'];
 
 // Create an instance of the importer and run the import
 try {
-	$db       = new Database($dbConfig);
-    $importer = new GiataOpenContentImporter($db, $inputUrls);
+    $importer = new GiataOpenContentImporter($dbConfigPath, $inputUrls);
     $importer->import();
 } catch (PDOException $e) {
     echo 'Caught PDOException: ' . $e->getMessage();

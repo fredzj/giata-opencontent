@@ -45,19 +45,12 @@ date_default_timezone_set(	'Europe/Amsterdam');
 mb_internal_encoding(		'UTF-8');
 setlocale(LC_ALL,			'nl_NL.utf8');
 
-// Parse the DB configuration file
-$filename = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
-if (($dbConfig = parse_ini_file($filename, FALSE, INI_SCANNER_TYPED)) === FALSE) {
-	throw new Exception("Parsing file " . $filename	. " FAILED");
-}
-
-// URL to fetch JSON data from
-$url = 'https://myhotel.giatamedia.com/i18n/facts/nl';
+$dbConfigPath = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
+$inputUrl = 'https://myhotel.giatamedia.com/i18n/facts/nl';
 
 // Create an instance of the importer and run the import
 try {
-	$db       = new Database($dbConfig);
-    $importer = new GiataDefinitionsImporter($db, $url);
+    $importer = new GiataDefinitionsImporter($dbConfigPath, $inputUrl);
     $importer->import();
 } catch (PDOException $e) {
     logError('Caught PDOException: ' . $e->getMessage());

@@ -45,12 +45,23 @@
         $this->connect($dbConfig);
     }
 
-    /**
-     * Connects to the database using the provided configuration.
-     * 
-     * @param array $dbConfig The database configuration.
-     */
-    private function connect($dbConfig) {
+	/**
+	* Establish a database connection.
+	*
+	* This method establishes a connection to the database using the provided configuration array.
+	* It sets the PDO error mode to exception and uses UTF-8 character encoding.
+	* If an exception occurs during the connection process, it is caught and logged.
+	*
+	* @param array $dbConfig The database configuration array containing the following keys:
+	*                        - db_pdo_driver_name: The PDO driver name (e.g., 'mysql').
+	*                        - db_hostname: The database host name.
+	*                        - db_database: The database name.
+	*                        - db_username: The database username.
+	*                        - db_password: The database password.
+	*
+	* @return void
+	*/
+    private function connect(array $dbConfig): void {
         try {
             if (empty($dbConfig['db_pdo_driver_name']) || empty($dbConfig['db_hostname']) || empty($dbConfig['db_database']) || empty($dbConfig['db_username']) || empty($dbConfig['db_password'])) {
                 throw new InvalidArgumentException('Invalid database configuration');
@@ -77,44 +88,19 @@
         }
     }
 
-     /**
-     * Returns the PDO database connection handle.
-     * 
-     * @return PDO|null The PDO database connection handle, or null on failure.
-     */
-    public function getConnection() {
-        return $this->dbh;
-    }
-
-    /**
-     * Executes a SELECT query and returns the fetched rows.
-     * 
-     * @param string $sql The SQL query to execute.
-     * @param array $params The parameters to bind to the SQL query.
-     * @return array The fetched rows as an associative array.
-     */
-    public function select($sql, $params = []) {
-        try {
-            $stmt = $this->dbh->prepare($sql);
-            $stmt->execute($params);
-            $fetchedRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $stmt->closeCursor();
-            return $fetchedRows;
-
-        } catch (PDOException $e) {
-            $this->logError('Caught PDOException: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Inserts multiple rows into a table.
-     * 
-     * @param string $table The name of the table to insert into.
-     * @param array $columns The columns to insert values into.
-     * @param array $values The values to insert.
-     */
-    public function insert($table, $columns, $values) {
+	/**
+	* Insert a record into the specified table.
+	*
+	* This method inserts a record into the specified table with the given columns and values.
+	* If an exception occurs during the insertion, it is caught and logged.
+	*
+	* @param string $table The name of the table to insert the record into.
+	* @param array $columns An array of column names for the table.
+	* @param array $values An array of values corresponding to the columns.
+	*
+	* @return void
+	*/
+    public function insert(string $table, array $columns, array $values): void {
         if (count($values) > 0) {
             $columns = implode(", ", $columns);
 
@@ -135,43 +121,120 @@
         }
     }
 
-    /**
-     * Logs a message to the database.
-     * 
-     * @param string $level The log level (e.g., 'INFO', 'ERROR').
-     * @param string $label A short label for the log entry.
-     * @param string $description A detailed description of the log entry.
-     */
-    public function log($level, $label, $description) {
+    public function dbinsert(string $table, array $columns, array $values): void {
+
+        if (count($values) > 0) {
+            $columns_str = implode(", ", $columns);
+            $placeholders = implode(", ", array_fill(0, count($columns), '?'));
+            $sql = "INSERT IGNORE INTO $table ($columns_str) VALUES ($placeholders)";
+            
+            try {
+                $stmt = $this->dbh->prepare($sql);
+                foreach ($values as $value) {
+                    $stmt->execute($value);
+                }
+                $stmt->closeCursor();
+            } catch (PDOException $e) {
+                logError('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
+            }
+        }
+    }
+    
+	/**
+	* Log a message to the database.
+	*
+	* This method logs a message to the 'log' table in the database with the specified level, label, and description.
+	*
+	* @param string $level The log level (e.g., 'error', 'info', 'debug').
+	* @param string $label A short label or title for the log entry.
+	* @param string $description A detailed description of the log entry.
+	*
+	* @return void
+	*/
+    public function log(string $level, string $label, string $description): void {
         $outputColumns = ['level', 'label', 'description'];
         $outputValues = [$level, $label, $description];
         $this->insert('log', $outputColumns, $outputValues);
     }
 
+	/**
+	* Execute a SELECT query and return the results.
+	*
+	* This method prepares and executes a SELECT query with optional parameters and returns the fetched rows as an associative array.
+	* If an exception occurs during the query execution, it is caught and logged.
+	*
+	* @param string $sql The SQL query to execute.
+	* @param array $params Optional parameters to bind to the query.
+	*
+	* @return array The fetched rows as an associative array. Returns an empty array if an error occurs.
+	*/
+    public function select(string $sql, array $params = []): array {
+        try {
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute($params);
+            $fetchedRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $fetchedRows;
+
+        } catch (PDOException $e) {
+            $this->logError('Caught PDOException: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     /**
-     * Truncates a table in the database.
-     * 
-     * @param string $tableName The name of the table to truncate.
-     */
-    public function truncate($tableName) {
+	* Truncate a table in the database.
+	*
+	* This method truncates the specified table, removing all rows and resetting any auto-increment values.
+	* If an exception occurs during the truncation, it is caught and logged.
+	*
+	* @param string $tableName The name of the table to truncate.
+	*
+	* @return void
+	*/
+    public function truncate(string $tableName):void {
         try {
             $sql = 'TRUNCATE `' . $tableName . '`';
             $stmt = $this->dbh->prepare($sql);
             $stmt->execute();
-            echo date("[G:i:s] ") . '- truncated table ' . htmlspecialchars($tableName, ENT_QUOTES, 'UTF-8') . PHP_EOL;
             $stmt->closeCursor();
-
+            echo date("[G:i:s] ") . '- truncated table ' . htmlspecialchars($tableName, ENT_QUOTES, 'UTF-8') . PHP_EOL;
         } catch (PDOException $e) {
             $this->logError('Caught PDOException: ' . $e->getMessage());
         }
     }
 
+	/**
+	* Update a record in the specified table.
+	*
+	* This method updates a record in the specified table with the given assignment and sets the current timestamp.
+	* If an exception occurs during the update, it is caught and logged.
+	*
+	* @param string $tableName The name of the table to update.
+	* @param string $id The ID of the record to update.
+	* @param string $assignment The assignment string specifying the columns and values to update.
+	*
+	* @return void
+	*/
+    public function update(string $tableName, string $id, string $assignment): void {
+        try {
+            $sql = "UPDATE $tableName SET $assignment, timestamp=NOW() WHERE id = $id";
+            $stmt = $dbh->prepare($sql);
+            $stmt->execute();
+            $stmt->closeCursor();
+        } catch (PDOException $e) {
+            $this->logError('Caught PDOException: ' . $e->getMessage());
+        }
+    }
+    
     /**
      * Logs an error message.
      * 
      * @param string $message The error message to log.
+     * @return void
+     *
      */
-    private function logError($message) {
+    private function logError(string $message): void {
         echo date("[G:i:s] ") . $message . PHP_EOL;
     }
 }

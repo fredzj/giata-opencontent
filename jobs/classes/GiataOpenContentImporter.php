@@ -35,6 +35,7 @@
  */
 class GiataOpenContentImporter {
     private $db;
+    private $dbConfigPath;
     private $inputUrls;
     private $outputColumns;
     private $outputValues;
@@ -47,12 +48,13 @@ class GiataOpenContentImporter {
      * @param Database $db The database connection object.
      * @param array $inputUrls The URLs to fetch XML data from.
      */
-    public function __construct($db, $inputUrls) {
-		$this->db  = $db;
+    public function __construct($dbConfigPath, $inputUrls) {
+		$this->dbConfigPath = $dbConfigPath;
         $this->inputUrls = $inputUrls;
         $this->initializeOutputColumns();
         $this->initializeOutputValues();
         $this->registerExitHandler();
+		$this->connectDatabase();
     }
 
     /**
@@ -106,6 +108,24 @@ class GiataOpenContentImporter {
         $this->timeStart = microtime(true);
         register_shutdown_function([new ExitHandler($this->timeStart), 'handleExit']);
     }
+
+	/**
+	 * Connects to the database using the configuration file.
+	 *
+	 * This method reads the database configuration from the specified INI file,
+	 * parses the configuration, and establishes a connection to the database.
+	 * If the configuration file cannot be parsed, an exception is thrown.
+	 *
+	 * @throws Exception If the configuration file cannot be parsed.
+	 * @return void
+	 */
+	private function connectDatabase() {
+		if (($dbConfig = parse_ini_file($this->dbConfigPath, FALSE, INI_SCANNER_TYPED)) === FALSE) {
+			throw new Exception("Parsing file " . $this->dbConfigPath	. " FAILED");
+		}
+		$this->db = new Database($dbConfig);
+		unset($dbConfig);
+	}
 
     /**
      * Imports the data from the XML feeds into the database.
