@@ -37,6 +37,7 @@ class GiataOpenContentImporter {
     private $db;
     private $dbConfigPath;
     private $inputUrls;
+    private $log;
     private $outputColumns;
     private $outputValues;
     private $outputDataLines = 0;
@@ -51,6 +52,7 @@ class GiataOpenContentImporter {
     public function __construct($dbConfigPath, $inputUrls) {
 		$this->dbConfigPath = $dbConfigPath;
         $this->inputUrls = $inputUrls;
+        $this->log = new Log();
         $this->initializeOutputColumns();
         $this->initializeOutputValues();
         $this->registerExitHandler();
@@ -124,7 +126,6 @@ class GiataOpenContentImporter {
 			throw new Exception("Parsing file " . $this->dbConfigPath	. " FAILED");
 		}
 		$this->db = new Database($dbConfig);
-		unset($dbConfig);
 	}
 
     /**
@@ -133,7 +134,7 @@ class GiataOpenContentImporter {
     public function import() {
         $this->truncateTables();
         foreach ($this->inputUrls as $inputUrl) {
-            echo date("[G:i:s] ") . 'Reading XML Feed ' . $inputUrl . PHP_EOL;
+            $this->log->info('Reading XML Feed ' . $this->inputUrl);
 
             if (($contents = file_get_contents($inputUrl)) !== false) {
                 $xml = simplexml_load_string($contents);
@@ -141,7 +142,7 @@ class GiataOpenContentImporter {
             }
         }
 
-        echo date("[G:i:s] ") . '- ' . $this->outputDataLines . ' rows processed' . PHP_EOL;
+        $this->log->info('- ' . $this->outputDataLines . ' rows processed');
     }
 
     /**
@@ -175,7 +176,7 @@ class GiataOpenContentImporter {
      */
     private function processMainXml($xml) {
         foreach ($xml->url as $url) {
-            echo date("[G:i:s] ") . '- Reading XML Feed ' . $url->loc . PHP_EOL;
+            $this->log->info('- Reading XML Feed ' . $url->loc);
 
             if (($contents = file_get_contents($url->loc)) !== false) {
                 $xml = simplexml_load_string($contents);
@@ -213,12 +214,12 @@ class GiataOpenContentImporter {
      * Inserts various types of content into the database.
      */
     private function insertVariousContent() {
-        $this->dbinsert('vendor_giata_chains', $this->outputColumns['chains'], array_unique($this->outputValues['chains']));
-        $this->dbinsert('vendor_giata_cities', $this->outputColumns['cities'], array_unique($this->outputValues['cities']));
-        $this->dbinsert('vendor_giata_destinations', $this->outputColumns['destinations'], array_unique($this->outputValues['destinations']));
-        $this->dbinsert('vendor_giata_roomtypes', $this->outputColumns['roomtypes'], array_unique($this->outputValues['roomtypes']));
-        $this->dbinsert('vendor_giata_variant_groups', $this->outputColumns['variant_groups'], array_unique($this->outputValues['variant_groups']));
-        $this->dbinsert('vendor_giata_variants', $this->outputColumns['variants'], array_unique($this->outputValues['variants']));
+        $this->db->insert('vendor_giata_chains', $this->outputColumns['chains'], array_unique($this->outputValues['chains']));
+        $this->db->insert('vendor_giata_cities', $this->outputColumns['cities'], array_unique($this->outputValues['cities']));
+        $this->db->insert('vendor_giata_destinations', $this->outputColumns['destinations'], array_unique($this->outputValues['destinations']));
+        $this->db->insert('vendor_giata_roomtypes', $this->outputColumns['roomtypes'], array_unique($this->outputValues['roomtypes']));
+        $this->db->insert('vendor_giata_variant_groups', $this->outputColumns['variant_groups'], array_unique($this->outputValues['variant_groups']));
+        $this->db->insert('vendor_giata_variants', $this->outputColumns['variants'], array_unique($this->outputValues['variants']));
     }
 
     /**
@@ -262,7 +263,7 @@ class GiataOpenContentImporter {
             $xml->geoCodes->geoCode->longitude ?? ''
         ];
 
-        $this->dbinsert('vendor_giata_accommodations', $this->outputColumns['accommodations'], $output_values);
+        $this->db->insert('vendor_giata_accommodations', $this->outputColumns['accommodations'], $output_values);
     }
 
     /**
@@ -275,7 +276,7 @@ class GiataOpenContentImporter {
         foreach ($xml->facts->fact as $fact) {
             $output_values[] = $this->prepareValues($xml['giataId'], $fact['factDefId']);
         }
-        $this->dbinsert('vendor_giata_accommodations_facts', $this->outputColumns['accommodations_facts'], array_unique($output_values));
+        $this->db->insert('vendor_giata_accommodations_facts', $this->outputColumns['accommodations_facts'], array_unique($output_values));
     }
 
     /**
@@ -298,7 +299,7 @@ class GiataOpenContentImporter {
                 }
             }
         }
-        $this->dbinsert('vendor_giata_accommodations_facts_attributes', $this->outputColumns['accommodations_facts_attributes'], array_unique($output_values));
+        $this->db->insert('vendor_giata_accommodations_facts_attributes', $this->outputColumns['accommodations_facts_attributes'], array_unique($output_values));
     }
 
     /**
@@ -315,7 +316,7 @@ class GiataOpenContentImporter {
                 }
             }
         }
-        $this->dbinsert('vendor_giata_accommodations_facts_variants', $this->outputColumns['accommodations_facts_variants'], array_unique($output_values));
+        $this->db->insert('vendor_giata_accommodations_facts_variants', $this->outputColumns['accommodations_facts_variants'], array_unique($output_values));
     }
 
     /**
@@ -329,7 +330,7 @@ class GiataOpenContentImporter {
             foreach ($xml->roomTypes->roomType as $roomtype) {
                 $output_values[] = $this->prepareValues($xml['giataId'], $roomtype['variantId']);
             }
-            $this->dbinsert('vendor_giata_accommodations_roomtypes', $this->outputColumns['accommodations_roomtypes'], array_unique($output_values));
+            $this->db->insert('vendor_giata_accommodations_roomtypes', $this->outputColumns['accommodations_roomtypes'], array_unique($output_values));
         }
     }
 
@@ -355,7 +356,7 @@ class GiataOpenContentImporter {
                     );
                 }
             }
-            $this->dbinsert('vendor_giata_images', $this->outputColumns['images'], $output_values);
+            $this->db->insert('vendor_giata_images', $this->outputColumns['images'], $output_values);
         }
     }
 
@@ -381,7 +382,7 @@ class GiataOpenContentImporter {
                     }
                 }
             }
-            $this->dbinsert('vendor_giata_texts', $this->outputColumns['texts'], $output_values);
+            $this->db->insert('vendor_giata_texts', $this->outputColumns['texts'], $output_values);
         }
     }
 
@@ -477,10 +478,6 @@ class GiataOpenContentImporter {
         }
     }
 
-    private function dbinsert($table, $columns, $values) {
-		$this->db->insert($table, $columns, $values);
-    }
-
     private function escapeIdentifier($identifier) {
         return "`" . str_replace("`", "``", $identifier) . "`";
     }
@@ -492,13 +489,9 @@ class GiataOpenContentImporter {
     private function logMultipleEntries($xml, $parent, $child, $message) {
         if (is_countable($xml->$parent->$child)) {
             if (count($xml->$parent->$child) > 1) {
-                $this->logError($message . $xml['giataId']);
+                $this->log->error($message . $xml['giataId']);
             }
         }
-    }
-
-    private function logError($message) {
-        echo date("[G:i:s] ") . $message . PHP_EOL;
     }
 
     private function getAccommodationEmail($xml) {

@@ -35,13 +35,14 @@
  */
  class Database {
     private $dbh;
-
+    private $log;
     /**
      * Database constructor.
      * 
      * @param array $dbConfig The database configuration.
      */
     public function __construct($dbConfig) {
+        $this->log = new Log();
         $this->connect($dbConfig);
     }
 
@@ -79,11 +80,11 @@
             );
 
         } catch (PDOException $e) {
-            $this->logError('Caught PDOException: ' . $e->getMessage());
+            $this->log->error('Caught PDOException: ' . $e->getMessage());
             $this->dbh = null;
 
         } catch (InvalidArgumentException $e) {
-            $this->logError('Caught InvalidArgumentException: ' . $e->getMessage());
+            $this->log->error('Caught InvalidArgumentException: ' . $e->getMessage());
             $this->dbh = null;
         }
     }
@@ -116,7 +117,7 @@
                 $stmt->execute();
                 $stmt->closeCursor();
             } catch (PDOException $e) {
-                $this->logError('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
+                $this->log->error('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
             }
         }
     }
@@ -135,7 +136,7 @@
                 }
                 $stmt->closeCursor();
             } catch (PDOException $e) {
-                logError('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
+                $this->log->error('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
             }
         }
     }
@@ -177,7 +178,7 @@
             return $fetchedRows;
 
         } catch (PDOException $e) {
-            $this->logError('Caught PDOException: ' . $e->getMessage());
+            $this->log->error('Caught PDOException: ' . $e->getMessage());
             return [];
         }
     }
@@ -198,9 +199,9 @@
             $stmt = $this->dbh->prepare($sql);
             $stmt->execute();
             $stmt->closeCursor();
-            echo date("[G:i:s] ") . '- truncated table ' . htmlspecialchars($tableName, ENT_QUOTES, 'UTF-8') . PHP_EOL;
+            $this->log->info('- truncated table ' . htmlspecialchars($tableName, ENT_QUOTES, 'UTF-8'));
         } catch (PDOException $e) {
-            $this->logError('Caught PDOException: ' . $e->getMessage());
+            $this->log->error('Caught PDOException: ' . $e->getMessage());
         }
     }
 
@@ -218,23 +219,13 @@
 	*/
     public function update(string $tableName, string $id, string $assignment): void {
         try {
-            $sql = "UPDATE $tableName SET $assignment, timestamp=NOW() WHERE id = $id";
-            $stmt = $dbh->prepare($sql);
+            $sql = "UPDATE $tableName SET $assignment, timestamp=NOW() WHERE id = :id";
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_STR);
             $stmt->execute();
             $stmt->closeCursor();
         } catch (PDOException $e) {
-            $this->logError('Caught PDOException: ' . $e->getMessage());
+            $this->log->error('Caught PDOException: ' . $e->getMessage());
         }
-    }
-    
-    /**
-     * Logs an error message.
-     * 
-     * @param string $message The error message to log.
-     * @return void
-     *
-     */
-    private function logError(string $message): void {
-        echo date("[G:i:s] ") . $message . PHP_EOL;
     }
 }

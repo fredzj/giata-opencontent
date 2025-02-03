@@ -37,8 +37,9 @@
  */
 
 require 'classes/Database.php';
-require 'classes/GiataDefinitionsImporter.php';
 require 'classes/ExitHandler.php';
+require 'classes/GiataDefinitionsImporter.php';
+require 'classes/Log.php';
 
 // Set defaults
 date_default_timezone_set(	'Europe/Amsterdam');
@@ -47,15 +48,16 @@ setlocale(LC_ALL,			'nl_NL.utf8');
 
 $dbConfigPath = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
 $inputUrl = 'https://myhotel.giatamedia.com/i18n/facts/nl';
+$log = new Log();
 
 // Create an instance of the importer and run the import
 try {
     $importer = new GiataDefinitionsImporter($dbConfigPath, $inputUrl);
     $importer->import();
 } catch (PDOException $e) {
-    logError('Caught PDOException: ' . $e->getMessage());
+    $log->error('Caught PDOException: ' . $e->getMessage());
 } catch (Exception $e) {
-    logError('Caught Exception: ' . $e->getMessage());
+    $log->error('Caught Exception: ' . $e->getMessage());
 } finally {
 	// The exit handler will be called automatically at the end of the script
 }

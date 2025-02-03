@@ -37,6 +37,7 @@ class GiataDefinitionsImporter {
     private $db;
     private $dbConfigPath;
     private $inputUrl;
+    private $log;
     private $outputColumns;
     private $outputValues;
     private $outputDataLines = 0;
@@ -51,6 +52,7 @@ class GiataDefinitionsImporter {
     public function __construct($dbConfigPath, $inputUrl) {
 		$this->dbConfigPath  = $dbConfigPath;
         $this->inputUrl = $inputUrl;
+        $this->log = new Log();
         $this->initializeOutputColumns();
         $this->initializeOutputValues();
         $this->registerExitHandler();
@@ -114,7 +116,6 @@ class GiataDefinitionsImporter {
 			throw new Exception("Parsing file " . $this->dbConfigPath	. " FAILED");
 		}
 		$this->db = new Database($dbConfig);
-		unset($dbConfig);
 	}
 
     /**
@@ -131,7 +132,7 @@ class GiataDefinitionsImporter {
 
         $this->processData($data);
         $this->insertData();
-        $this->logMessage('- ' . $this->outputDataLines . ' rows processed');
+        $this->log->info('- ' . $this->outputDataLines . ' rows processed');
     }
 
     /**
@@ -159,7 +160,7 @@ class GiataDefinitionsImporter {
      * @return string The fetched JSON data.
      */
     private function fetchData() {
-        $this->logMessage('Reading JSON Feed ' . $this->inputUrl);
+        $this->log->info('Reading JSON Feed ' . $this->inputUrl);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->inputUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -171,15 +172,6 @@ class GiataDefinitionsImporter {
         }
 
         return $response;
-    }
-
-    /**
-     * Logs a message to the console.
-     * 
-     * @param string $message The message to log.
-     */
-    private function logMessage($message) {
-        echo date("[G:i:s] ") . $message . PHP_EOL;
     }
     
     /**
@@ -299,25 +291,14 @@ class GiataDefinitionsImporter {
      * Inserts the processed data into the database.
      */
     private function insertData() {
-        $this->dbinsert('vendor_giata_definitions_attributes', $this->outputColumns['attributes'], array_unique($this->outputValues['attributes']));
-        $this->dbinsert('vendor_giata_definitions_contexttree', $this->outputColumns['contexttree'], array_unique($this->outputValues['contexttree']));
-        $this->dbinsert('vendor_giata_definitions_contexttree_facts', $this->outputColumns['contexttree_facts'], array_unique($this->outputValues['contexttree_facts']));
-        $this->dbinsert('vendor_giata_definitions_facts', $this->outputColumns['facts'], array_unique($this->outputValues['facts']));
-        $this->dbinsert('vendor_giata_definitions_facts_attributes', $this->outputColumns['facts_attributes'], array_unique($this->outputValues['facts_attributes']));
-        $this->dbinsert('vendor_giata_definitions_facts_variantgrouptypes', $this->outputColumns['facts_variantgrouptypes'], array_unique($this->outputValues['facts_variantgrouptypes']));
-        $this->dbinsert('vendor_giata_definitions_motif_types', $this->outputColumns['motif_types'], array_unique($this->outputValues['motif_types']));
-        $this->dbinsert('vendor_giata_definitions_units', $this->outputColumns['units'], array_unique($this->outputValues['units']));
-    }
-
-    /**
-     * Inserts data into a database table.
-     * 
-     * @param string $table The name of the table to insert into.
-     * @param array $columns The columns to insert values into.
-     * @param array $values The values to insert.
-     */
-    private function dbinsert($table, $columns, $values) {
-		$this->db->insert($table, $columns, $values);
+        $this->db->insert('vendor_giata_definitions_attributes', $this->outputColumns['attributes'], array_unique($this->outputValues['attributes']));
+        $this->db->insert('vendor_giata_definitions_contexttree', $this->outputColumns['contexttree'], array_unique($this->outputValues['contexttree']));
+        $this->db->insert('vendor_giata_definitions_contexttree_facts', $this->outputColumns['contexttree_facts'], array_unique($this->outputValues['contexttree_facts']));
+        $this->db->insert('vendor_giata_definitions_facts', $this->outputColumns['facts'], array_unique($this->outputValues['facts']));
+        $this->db->insert('vendor_giata_definitions_facts_attributes', $this->outputColumns['facts_attributes'], array_unique($this->outputValues['facts_attributes']));
+        $this->db->insert('vendor_giata_definitions_facts_variantgrouptypes', $this->outputColumns['facts_variantgrouptypes'], array_unique($this->outputValues['facts_variantgrouptypes']));
+        $this->db->insert('vendor_giata_definitions_motif_types', $this->outputColumns['motif_types'], array_unique($this->outputValues['motif_types']));
+        $this->db->insert('vendor_giata_definitions_units', $this->outputColumns['units'], array_unique($this->outputValues['units']));
     }
 
     /**
