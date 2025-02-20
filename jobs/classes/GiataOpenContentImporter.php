@@ -134,7 +134,7 @@ class GiataOpenContentImporter {
     public function import() {
         $this->truncateTables();
         foreach ($this->inputUrls as $inputUrl) {
-            $this->log->info('Reading XML Feed ' . $this->inputUrl);
+            $this->log->info('Reading XML Feed ' . $inputUrl);
 
             if (($contents = file_get_contents($inputUrl)) !== false) {
                 $xml = simplexml_load_string($contents);
@@ -489,7 +489,7 @@ class GiataOpenContentImporter {
     private function logMultipleEntries($xml, $parent, $child, $message) {
         if (is_countable($xml->$parent->$child)) {
             if (count($xml->$parent->$child) > 1) {
-                $this->log->error($message . $xml['giataId']);
+                $this->log->info($message . $xml['giataId']);
             }
         }
     }

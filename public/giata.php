@@ -37,8 +37,8 @@ header('Content-Type: text/html; charset=utf-8');
  * @author Fred Onis
  */
 
-require 'classes/Database.php';
-require 'classes/GiataDashboard.php';
+require __DIR__ . '/classes/Database.php';
+require __DIR__ . '/classes/GiataDashboard.php';
 	
 // Set defaults
 date_default_timezone_set('Europe/Amsterdam');
