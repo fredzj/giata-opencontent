@@ -248,11 +248,6 @@ class GiataOpenContentImporter {
         $acco_phone = $this->getAccommodationPhone($xml);
         $acco_email = $this->getAccommodationEmail($xml);
         $acco_url = $this->getAccommodationUrl($xml);
-		if (intval($xml['giataId']) === 467) {
-			echo 'phones: ' . $acco_phone . PHP_EOL;
-			echo 'emails: ' . $acco_email . PHP_EOL;
-			echo 'urls: ' . $acco_url . PHP_EOL;
-		}
 
         $output_values = [
             $xml['giataId'],
