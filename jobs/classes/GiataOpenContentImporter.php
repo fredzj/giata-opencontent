@@ -37,6 +37,7 @@ class GiataOpenContentImporter {
     private $db;
     private $dbConfigPath;
     private $inputUrls;
+    private $locale = 'en';
     private $log;
     private $outputColumns;
     private $outputValues;
@@ -65,6 +66,7 @@ class GiataOpenContentImporter {
     private function initializeOutputColumns() {
         $this->outputColumns = [
             'accommodations'                 => ['giata_id', 'name', 'city_giata_id', 'destination_giata_id', 'country_code', 'source', 'rating', 'address_street', 'address_streetnum', 'address_zip', 'address_cityname', 'address_pobox', 'address_federalstate_giata_id', 'phone', 'email', 'url', 'geocode_accuracy', 'geocode_latitude', 'geocode_longitude'],
+            'accommodations_chains'          => ['giataId', 'chainId'],
             'accommodations_facts'           => ['giataId', 'factDefId'],
             'accommodations_facts_attributes'=> ['giataId', 'factDefId', 'attributeDefId', 'value', 'unitDefId'],
             'accommodations_facts_variants'  => ['giataId', 'factDefId', 'variantId'],
@@ -86,6 +88,7 @@ class GiataOpenContentImporter {
     private function initializeOutputValues() {
         $this->outputValues = [
             'accommodations'                 => [],
+            'accommodations_chains'          => [],
             'accommodations_facts'           => [],
             'accommodations_facts_attributes'=> [],
             'accommodations_facts_variants'  => [],
@@ -162,7 +165,8 @@ class GiataOpenContentImporter {
 			'vendor_giata_roomtypes',
 			'vendor_giata_texts',
 			'vendor_giata_variant_groups',
-			'vendor_giata_variants'
+			'vendor_giata_variants',
+			'vendor_giata_accommodations_chains'
         ];
         foreach ($tables as $table) {
 			$this->db->truncate($table);
@@ -202,6 +206,7 @@ class GiataOpenContentImporter {
         $this->insertAccommodationFactsVariants($xml);
         $this->insertAccommodationRoomtypes($xml);
 
+        $this->getAccommodationChains($xml);
         $this->getChains($xml);
         $this->getCities($xml);
         $this->getDestinations($xml);
@@ -220,6 +225,8 @@ class GiataOpenContentImporter {
         $this->db->insert('vendor_giata_roomtypes', $this->outputColumns['roomtypes'], array_unique($this->outputValues['roomtypes']));
         $this->db->insert('vendor_giata_variant_groups', $this->outputColumns['variant_groups'], array_unique($this->outputValues['variant_groups']));
         $this->db->insert('vendor_giata_variants', $this->outputColumns['variants'], array_unique($this->outputValues['variants']));
+        //print_r($this->outputValues['accommodations_chains']);
+        $this->db->insert('vendor_giata_accommodations_chains', $this->outputColumns['accommodations_chains'], array_unique($this->outputValues['accommodations_chains']));
     }
 
     /**
@@ -370,7 +377,7 @@ class GiataOpenContentImporter {
             $output_values = [];
             $sequence = 0;
             foreach ($xml->texts->text as $text) {
-                if ($text['locale'] == 'nl') {
+                if ($text['locale'] == $this->locale) {
                     foreach ($text->sections->section as $section) {
                         $output_values[] = $this->prepareValues(
                             $xml['giataId'],
@@ -387,13 +394,28 @@ class GiataOpenContentImporter {
     }
 
     /**
+     * Retrieves and processes accommodation chains data from the XML.
+     * 
+     * @param SimpleXMLElement $xml The XML data containing accommodation chains information.
+     */
+    private function getAccommodationChains($xml) {
+        if (isset($xml->chains)) {
+            foreach ($xml->chains->chain as $chain) {
+                $this->outputValues['accommodations_chains'][] = $this->prepareValues($xml['giataId'], $chain['giataId']);
+            }
+        }
+    }
+
+    /**
      * Retrieves and processes chain data from the XML.
      * 
      * @param SimpleXMLElement $xml The XML data containing chain information.
      */
     private function getChains($xml) {
         if (isset($xml->chains)) {
-            $this->outputValues['chains'][] = $this->prepareValues($xml->chains->chain['giataId'], addslashes(trim($xml->chains->chain->names->name)));
+            foreach ($xml->chains->chain as $chain) {
+                $this->outputValues['chains'][] = $this->prepareValues($chain['giataId'], addslashes(trim($chain->names->name)));
+            }
         }
     }
 
@@ -405,7 +427,7 @@ class GiataOpenContentImporter {
     private function getCities($xml) {
         if (isset($xml->city)) {
             foreach ($xml->city->names->name as $name) {
-                if (!empty($xml->city['giataId']) && !empty($name) && $name['locale'] == 'nl') {
+                if (!empty($xml->city['giataId']) && !empty($name) && $name['locale'] == $this->locale) {
                     $this->outputValues['cities'][] = $this->prepareValues($xml->city['giataId'], addslashes(trim($name)));
                 }
             }
@@ -420,7 +442,7 @@ class GiataOpenContentImporter {
     private function getDestinations($xml) {
         if (isset($xml->destination)) {
             foreach ($xml->destination->names->name as $name) {
-                if (!empty($xml->destination['giataId']) && !empty($name) && $name['locale'] == 'nl') {
+                if (!empty($xml->destination['giataId']) && !empty($name) && $name['locale'] == $this->locale) {
                     $this->outputValues['destinations'][] = $this->prepareValues($xml->destination['giataId'], addslashes(trim($name)));
                 }
             }
@@ -500,7 +522,7 @@ class GiataOpenContentImporter {
 
     private function getAccommodationName($xml) {
         foreach ($xml->names->name as $name) {
-            if ($name['locale'] == 'nl' || $name['isDefault'] == 'true') {
+            if ($name['locale'] == $this->locale || $name['isDefault'] == 'true') {
                 return $name;
             }
         }

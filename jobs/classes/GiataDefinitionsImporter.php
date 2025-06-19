@@ -127,7 +127,8 @@ class GiataDefinitionsImporter {
         $data = json_decode($jsonData, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            die("Failed to decode JSON: " . json_last_error_msg());
+            //die("Failed to decode JSON: " . json_last_error_msg());
+            $this->log->error('- Failed to decode JSON: ' . json_last_error_msg());
         }
 
         $this->processData($data);
@@ -160,7 +161,7 @@ class GiataDefinitionsImporter {
      * @return string The fetched JSON data.
      */
     private function fetchData() {
-        $this->log->info('Reading JSON Feed ' . $this->inputUrl);
+        $this->log->info('Reading JSON Feed ' . $this->inputUrl . '...');
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->inputUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

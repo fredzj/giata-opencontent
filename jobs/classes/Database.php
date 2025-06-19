@@ -113,12 +113,15 @@
 
             try {
                 $sql = "INSERT IGNORE INTO $table ($columns) VALUES $values";
+
                 $stmt = $this->dbh->prepare($sql);
                 $stmt->execute();
                 $stmt->closeCursor();
             } catch (PDOException $e) {
                 $this->log->error('Caught PDOException: ' . $e->getMessage() . ' SQL:' . $sql);
             }
+        //} else {
+        //    $this->log->debug('No values provided for insert into ' . $table);
         }
     }
 
@@ -194,6 +197,7 @@
 	* @return void
 	*/
     public function truncate(string $tableName):void {
+        $this->dbh->exec('SET FOREIGN_KEY_CHECKS = 0;');
         try {
             $sql = 'TRUNCATE `' . $tableName . '`';
             $stmt = $this->dbh->prepare($sql);
@@ -203,6 +207,7 @@
         } catch (PDOException $e) {
             $this->log->error('Caught PDOException: ' . $e->getMessage());
         }
+        $this->dbh->exec('SET FOREIGN_KEY_CHECKS = 1;');
     }
 
 	/**

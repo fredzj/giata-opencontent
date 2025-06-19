@@ -47,7 +47,7 @@ mb_internal_encoding(		'UTF-8');
 setlocale(LC_ALL,			'nl_NL.utf8');
 
 $dbConfigPath = substr(__DIR__, 0, mb_strrpos(__DIR__, '/')) . '/config/db.ini';
-$inputUrl = 'https://myhotel.giatamedia.com/i18n/facts/nl';
+$inputUrl = 'https://giatadrive.com/i18n/facts/en';
 $log = new Log();
 
 // Create an instance of the importer and run the import
