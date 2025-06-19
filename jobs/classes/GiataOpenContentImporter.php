@@ -248,6 +248,11 @@ class GiataOpenContentImporter {
         $acco_phone = $this->getAccommodationPhone($xml);
         $acco_email = $this->getAccommodationEmail($xml);
         $acco_url = $this->getAccommodationUrl($xml);
+		if (intval($xml['giataId']) === 467) {
+			echo 'phones: ' . $acco_phone . PHP_EOL;
+			echo 'emails: ' . $acco_email . PHP_EOL;
+			echo 'urls: ' . $acco_url . PHP_EOL;
+		}
 
         $output_values = [
             $xml['giataId'],
@@ -523,7 +528,7 @@ class GiataOpenContentImporter {
             foreach ($xml->emails->email as $email) {
                 $emails[] = trim((string)$email);
             }
-            return implode(', ', $emails);
+            return implode('|', $emails);
         } else {
             return $xml->emails->email ?? '';
         }
@@ -546,7 +551,7 @@ class GiataOpenContentImporter {
                     $phones[] = trim((string)$phone);
                 }
             }
-            return implode(', ', $phones);
+            return implode('|', $phones);
         } else {
             return $xml->phones->phone ?? '';
         }
@@ -569,7 +574,7 @@ class GiataOpenContentImporter {
             foreach ($xml->urls->url as $url) {
                 $urls[] = trim((string)$url);
             }
-            return implode(', ', $urls);
+            return implode('|', $urls);
         } else {
             return $xml->urls->url ?? '';
         }
