@@ -247,6 +247,7 @@ class GiataOpenContentImporter {
         $acco_rating = $this->getAccommodationRating($xml);
         $acco_phone = $this->getAccommodationPhone($xml);
         $acco_email = $this->getAccommodationEmail($xml);
+        $acco_url = $this->getAccommodationUrl($xml);
 
         $output_values = [
             $xml['giataId'],
@@ -264,7 +265,7 @@ class GiataOpenContentImporter {
             $xml->federalState['giataId'],
             $acco_phone,
             addslashes($acco_email),
-            addslashes($xml->urls->url),
+            addslashes($acco_url),
             $xml->geoCodes->geoCode['accuracy'] ?? '',
             $xml->geoCodes->geoCode->latitude ?? '',
             $xml->geoCodes->geoCode->longitude ?? ''
@@ -517,7 +518,15 @@ class GiataOpenContentImporter {
     }
 
     private function getAccommodationEmail($xml) {
-        return $xml->emails->email ?? '';
+        if (is_iterable($xml->emails->email)) {
+            $emails = [];
+            foreach ($xml->emails->email as $email) {
+                $emails[] = trim((string)$email);
+            }
+            return implode(', ', $emails);
+        } else {
+            return $xml->emails->email ?? '';
+        }
     }
 
     private function getAccommodationName($xml) {
@@ -531,13 +540,16 @@ class GiataOpenContentImporter {
 
     private function getAccommodationPhone($xml) {
         if (is_iterable($xml->phones->phone)) {
+            $phones = [];
             foreach ($xml->phones->phone as $phone) {
                 if ($phone['tech'] == 'phone') {
-                    return $phone;
+                    $phones[] = trim((string)$phone);
                 }
             }
+            return implode(', ', $phones);
+        } else {
+            return $xml->phones->phone ?? '';
         }
-        return '';
     }
 
     private function getAccommodationRating($xml) {
@@ -549,5 +561,17 @@ class GiataOpenContentImporter {
             }
         }
         return '';
+    }
+
+    private function getAccommodationUrl($xml) {
+        if (is_iterable($xml->urls->url)) {
+            $urls = [];
+            foreach ($xml->urls->url as $url) {
+                $urls[] = trim((string)$url);
+            }
+            return implode(', ', $urls);
+        } else {
+            return $xml->urls->url ?? '';
+        }
     }
 }
